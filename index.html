@@ -521,6 +521,52 @@
     .btn-primary{ width:100%; }
   }
     @media (max-width: 900px) { aside.filters { display: none; } }
+    /* ===== Responsive layout ===== */
+
+/* Tablet */
+@media (max-width: 1199px) {
+  aside.details-panel {
+    display: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  aside.filters {
+    display: none;
+  }
+
+  aside.details-panel {
+    display: none;
+  }
+
+  .main-container {
+    flex-direction: column;
+  }
+
+  header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 720px;
+  }
+
+  .view-btn,
+  .btn-primary {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}
   </style>
 </head>
 
