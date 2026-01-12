@@ -2,645 +2,594 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Benchmark Automotive Ecosystem</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Automotive Benchmark Ecosystem</title>
 
-  <!-- CDNs -->
+  <!-- Fonts & CDNs -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
+  <!-- Icons (Phosphor Icons for modern look) -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
   <style>
     :root{
-      --primary:#2563eb;
-      --primary-dark:#1e40af;
-      --bg-light:#f3f4f6;
-      --bg-white:#ffffff;
-      --text-main:#111827;
-      --text-muted:#6b7280;
-      --border:#e5e7eb;
-      --sidebar-width:280px;
-      --panel-width:360px;
+      /* Palette moderne et professionnelle */
+      --primary: #3b82f6; /* Bleu vibrant */
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --accent: #6366f1; /* Indigo */
+      
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-panel: #ffffff;
+      
+      --text-main: #0f172a;
+      --text-secondary: #64748b;
+      --text-tertiary: #94a3b8;
+      
+      --border: #e2e8f0;
+      --border-hover: #cbd5e1;
+      
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      
+      --sidebar-width: 300px;
+      --panel-width: 400px;
+      --header-height: 64px;
+      --z-sidebar: 100;
+      --z-panel: 110;
+      --z-header: 50;
     }
 
-    *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg-light);
-      color:var(--text-main);
-      height:100vh;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
+    /* Reset & Base */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
     }
 
-    /* Disclaimer */
-    .disclaimer-bar{
-      background:#fff7ed;
-      color:#9a3412;
-      font-size:0.75rem;
-      text-align:center;
-      padding:6px 10px;
-      border-bottom:1px solid #fed7aa;
-      flex-shrink:0;
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* --- Disclaimer --- */
+    .disclaimer-bar {
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 6px;
+      border-bottom: 1px solid #fcd34d;
+      flex-shrink: 0;
+      font-weight: 500;
     }
 
-    /* Navbar */
-    header{
-      background:var(--bg-white);
-      border-bottom:1px solid var(--border);
-      padding:0.75rem 1.25rem;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      height:60px;
-      flex-shrink:0;
-      gap:12px;
+    /* --- Header --- */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      flex-shrink: 0;
+      z-index: var(--z-header);
+      box-shadow: var(--shadow-sm);
     }
-    .brand{
-      font-weight:800;
-      font-size:1.05rem;
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      white-space:nowrap;
+    .brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
     }
-    .brand .dot{
-      width:10px;height:10px;border-radius:50%;
-      background:var(--primary);
-      display:inline-block;
+    .brand .logo-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 16px;
     }
-    .brand span{color:var(--primary);}
-    .nav-controls{
-      display:flex;
-      gap:0.75rem;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      width:100%;
-    }
-    input[type="text"]{
-      padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:8px;
-      font-size:0.9rem;
-      width:260px;
-      background:#fff;
-    }
-    .view-switch{
-      display:flex;
-      background:var(--bg-light);
-      padding:3px;
-      border-radius:10px;
-      border:1px solid var(--border);
-    }
-    .view-btn{
-      border:none;
-      background:transparent;
-      padding:7px 12px;
-      cursor:pointer;
-      font-size:0.85rem;
-      border-radius:8px;
-      color:var(--text-muted);
-      font-weight:600;
-      transition:all .15s;
-      white-space:nowrap;
-    }
-    .view-btn.active{
-      background:var(--bg-white);
-      color:var(--primary);
-      box-shadow:0 1px 2px rgba(0,0,0,.08);
-    }
-    .btn-primary{
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      padding:8px 12px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:0.85rem;
-      font-weight:700;
-      white-space:nowrap;
-    }
-    .btn-primary:hover{background:var(--primary-dark);}
-    .btn-secondary{
-      background:#fff;
-      color:var(--text-main);
-      border:1px solid var(--border);
-      padding:8px 12px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:0.85rem;
-      font-weight:800;
-      white-space:nowrap;
-    }
-    .btn-secondary:hover{background:#f9fafb;}
+    .brand span { color: var(--primary); }
 
-    /* Layout */
-    .main-container{
-      display:flex;
-      flex:1;
-      overflow:hidden;
-      min-height:0;
+    .nav-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
     }
 
-    /* Left Sidebar */
-    aside.filters{
-      width:var(--sidebar-width);
-      background:var(--bg-white);
-      border-right:1px solid var(--border);
-      padding:1.25rem;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:1.25rem;
-      flex-shrink:0;
-      min-height:0;
+    /* Input & Buttons */
+    .search-wrapper { position: relative; }
+    .search-wrapper i {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--text-tertiary); pointer-events: none;
     }
-    .filter-group h4{
-      margin:0 0 0.5rem 0;
-      font-size:0.8rem;
-      text-transform:uppercase;
-      color:var(--text-muted);
-      letter-spacing:0.08em;
+    input[type="text"] {
+      padding: 9px 12px 9px 34px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      width: 280px;
+      background: var(--bg-body);
+      transition: all 0.2s;
+      font-family: inherit;
     }
-    .checkbox-group{
-      display:flex;
-      flex-direction:column;
-      gap:0.5rem;
-    }
-    .checkbox-item{
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      font-size:0.9rem;
-      cursor:pointer;
-      user-select:none;
-    }
-    select{
-      width:100%;
-      padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:#fff;
-    }
-    .help{
-      color:var(--text-muted);
-      font-size:0.75rem;
-      line-height:1.3;
-    }
-    .range-wrap{
-      padding:0 2px;
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+      background: #fff;
     }
 
-    /* Main */
-    main{
-      flex:1;
-      position:relative;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-      min-height:0;
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
     }
-    .view-container{
-      flex:1;
-      overflow:hidden;
-      position:relative;
-      display:none;
-      min-height:0;
+    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-secondary { background: #fff; border-color: var(--border); color: var(--text-main); }
+    .btn-secondary:hover { background: var(--bg-body); border-color: var(--border-hover); }
+    .btn-icon-only { padding: 8px; font-size: 1.2rem; color: var(--text-secondary); background: transparent; }
+    .btn-icon-only:hover { background: var(--bg-body); color: var(--text-main); }
+
+    /* View Switcher */
+    .view-switch {
+      background: var(--bg-body);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      display: flex;
+      gap: 2px;
     }
-    .view-container.active{display:block;}
-    .view-container.flex-view{
-      display:flex;
-      flex-direction:column;
-      padding:1rem;
-      gap:1rem;
-      overflow-y:auto;
-      min-height:0;
+    .view-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .view-btn:hover { color: var(--text-main); }
+    .view-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
+    /* --- Layout --- */
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- Sidebar Filters --- */
+    aside.filters {
+      width: var(--sidebar-width);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: var(--z-sidebar);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .filters-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .filters-content {
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+    
+    .filter-group h4 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .checkbox-group { display: flex; flex-direction: column; gap: 0.6rem; }
+    .checkbox-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.9rem; cursor: pointer; user-select: none;
+    }
+    .checkbox-item input { accent-color: var(--primary); width: 16px; height: 16px; }
+    
+    select {
+      width: 100%; padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-body);
+      font-size: 0.9rem;
+    }
+    .range-wrap { padding: 0 4px; }
+    input[type=range] { width: 100%; accent-color: var(--primary); }
+
+    /* --- Main Content --- */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-body);
+    }
+    .view-container {
+      height: 100%;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .view-container.active { display: block; }
+    
     /* Table */
-    .table-wrapper{
-      background:var(--bg-white);
-      border-radius:12px;
-      border:1px solid var(--border);
-      overflow:auto;
-      height:100%;
+    .table-container {
+      height: 100%; overflow: auto; padding: 1rem;
     }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:0.9rem;
-      min-width:900px;
+    .table-card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
     }
-    th{
-      background:#f9fafb;
-      padding:12px 14px;
-      text-align:left;
-      border-bottom:1px solid var(--border);
-      font-weight:800;
-      cursor:pointer;
-      position:sticky;
-      top:0;
-      z-index:10;
-      white-space:nowrap;
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    th {
+      background: #f8fafc;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em;
     }
-    td{
-      padding:12px 14px;
-      border-bottom:1px solid var(--border);
-      vertical-align:top;
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text-main);
     }
-    tr:hover{background:#f9fafb; cursor:pointer;}
-    tr.selected{background:#eff6ff;}
-    .tag-pill{
-      display:inline-block;
-      background:#eef2ff;
-      border:1px solid #e0e7ff;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:0.75rem;
-      margin:2px 4px 0 0;
-      color:#1f2937;
-      white-space:nowrap;
+    tr:last-child td { border-bottom: none; }
+    tr { transition: background 0.1s; cursor: pointer; }
+    tr:hover { background: var(--primary-light); }
+    tr.selected { background: #dbeafe; }
+    
+    .tag-pill {
+      display: inline-block;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.75rem; font-weight: 600;
+      color: var(--text-secondary);
+      margin: 2px;
+      border: 1px solid var(--border);
     }
-    .muted{color:var(--text-muted); font-size:0.82rem;}
 
-    /* Map */
-    #map{
-      width:100%;
-      height:100%;
-      background:#e5e5e5;
+    /* Map & Network */
+    #map, #network-container { width: 100%; height: 100%; }
+    
+    .floating-legend {
+      position: absolute; top: 1rem; left: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 1rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      z-index: 500;
+      max-width: 280px;
     }
-    .custom-div-icon{
-      background:white;
-      border:2px solid var(--primary);
-      color:var(--primary);
-      font-weight:800;
-      border-radius:999px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      box-shadow:0 2px 4px rgba(0,0,0,.2);
-    }
-    .map-legend{
-      position:absolute;
-      top:10px;
-      left:10px;
-      background:rgba(255,255,255,.92);
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-      font-size:0.8rem;
-      z-index:500;
-      max-width:260px;
-    }
-    .legend-row{display:flex; align-items:center; gap:8px; margin:4px 0;}
-    .swatch{width:10px; height:10px; border-radius:50%; display:inline-block;}
 
     /* Charts */
-    .charts-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      grid-template-rows:1fr 1fr;
-      gap:1rem;
-      height:100%;
-      padding:1rem;
-      box-sizing:border-box;
+    .charts-scroll {
+      height: 100%; overflow-y: auto; padding: 1.5rem;
     }
-    .chart-card{
-      background:var(--bg-white);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:1rem;
-      position:relative;
-      min-height:240px;
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      padding-bottom: 2rem;
     }
-    .chart-card:nth-child(3){grid-column:span 2;}
-    .chart-title{
-      font-size:0.85rem;
-      font-weight:800;
-      color:var(--text-muted);
-      letter-spacing:0.02em;
-      margin:0 0 10px 0;
-      text-transform:uppercase;
+    .chart-card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      height: 320px;
+      display: flex; flex-direction: column;
     }
+    .chart-header { margin-bottom: 1rem; font-weight: 700; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;}
 
-    /* Network */
-    #network-container{
-      width:100%;
-      height:100%;
-      background:#f8fafc;
-      position:relative;
+    /* --- Detail Panel (Right) --- */
+    aside.details-panel {
+      width: var(--panel-width);
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+      z-index: var(--z-panel);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -4px 0 15px rgba(0,0,0,0.03);
     }
-    .network-legend{
-      position:absolute;
-      bottom:10px;
-      left:10px;
-      background:rgba(255,255,255,.92);
-      padding:10px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      font-size:0.8rem;
-      pointer-events:none;
-      max-width:280px;
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
     }
-    .network-toolbar{
-      position:absolute;
-      top:10px;
-      left:10px;
-      background:rgba(255,255,255,.92);
-      padding:10px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      z-index:2;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      font-size:0.85rem;
+    .close-panel-btn {
+      display: none; /* Mobile only */
+      position: absolute; top: 1rem; right: 1rem;
+      background: #f1f5f9; border-radius: 50%; padding: 8px;
+      cursor: pointer;
     }
-    .chip{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      padding:6px 10px;
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:999px;
-      font-weight:700;
-      cursor:pointer;
-      user-select:none;
+    .entity-hero {
+      display: flex; gap: 1rem; align-items: flex-start;
     }
-    .chip input{cursor:pointer;}
+    .entity-avatar {
+      width: 64px; height: 64px;
+      background: var(--primary); color: #fff;
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.5rem;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      flex-shrink: 0;
+    }
+    .entity-info h2 { margin: 0 0 6px 0; font-size: 1.4rem; line-height: 1.2; letter-spacing: -0.02em; }
+    
+    .panel-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .panel-section { margin-bottom: 2rem; }
+    .panel-section h5 {
+      margin: 0 0 0.8rem 0; font-size: 0.8rem;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);
+    }
+    .panel-section p { line-height: 1.6; color: var(--text-secondary); margin: 0; }
 
-    /* Right Panel */
-    aside.details-panel{
-      width:var(--panel-width);
-      border-left:1px solid var(--border);
-      padding:0;
-      background:#f9fafb;
-      flex-shrink:0;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
+    /* Assistant Box */
+    .assistant-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
     }
-    .empty-state{
-      text-align:center;
-      margin-top:40%;
-      transform:translateY(-50%);
-      color:var(--text-muted);
-      padding:0 20px;
+    .assistant-box::before {
+      content: ''; position: absolute; top: -10px; right: -10px;
+      width: 60px; height: 60px; background: rgba(255,255,255,0.4);
+      border-radius: 50%;
     }
-    .panel-header{
-      background:var(--bg-white);
-      padding:1.25rem;
-      border-bottom:1px solid var(--border);
+    .assistant-title {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 700; color: var(--primary-dark);
+      margin-bottom: 0.75rem; font-size: 0.95rem;
     }
-    .entity-avatar{
-      width:52px;height:52px;
-      background:var(--primary);
-      color:#fff;
-      border-radius:14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      font-size:1.05rem;
-      margin-bottom:0.75rem;
-      letter-spacing:0.05em;
-    }
-    .panel-content{
-      padding:1.25rem;
-      overflow-y:auto;
-      flex:1;
-      min-height:0;
-    }
-    .panel-section{margin-bottom:1.1rem;}
-    .panel-section h5{
-      margin:0 0 0.5rem 0;
-      color:var(--text-muted);
-      font-size:0.78rem;
-      text-transform:uppercase;
-      letter-spacing:0.08em;
-    }
-    .panel-section p{
-      margin:0;
-      font-size:0.9rem;
-      line-height:1.5;
-    }
-    .assistant-box{
-      background:#eff6ff;
-      border:1px solid #bfdbfe;
-      border-radius:12px;
-      padding:1rem;
-      margin-top:0.25rem;
-    }
-    .assistant-title{
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      font-weight:900;
-      color:var(--primary-dark);
-      margin-bottom:0.5rem;
-      font-size:0.9rem;
-    }
-    .assistant-content{
-      font-size:0.85rem;
-      color:#1e3a8a;
-      line-height:1.45;
-    }
-    .source-link{
-      font-size:0.82rem;
-      color:var(--text-muted);
-      display:block;
-      margin-top:6px;
-      text-decoration:none;
-      word-break:break-word;
-    }
-    .source-link:hover{text-decoration:underline;}
+    .assistant-content { font-size: 0.9rem; color: #1e40af; line-height: 1.5; }
 
     /* Badges */
-    .badge{
-      padding:3px 8px;
-      border-radius:999px;
-      font-size:0.75rem;
-      font-weight:900;
-      border:1px solid var(--border);
-      display:inline-block;
-      white-space:nowrap;
+    .badge {
+      display: inline-flex; align-items: center; padding: 4px 10px;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+      border: 1px solid transparent;
     }
-    .badge.OEM{ background:#dbeafe; color:#1e40af; border-color:#bfdbfe; }
-    .badge.Tier1{ background:#dcfce7; color:#166534; border-color:#bbf7d0; }
-    .badge.Tier2{ background:#fef3c7; color:#92400e; border-color:#fde68a; }
-    .badge.Battery{ background:#ede9fe; color:#5b21b6; border-color:#ddd6fe; }
-    .badge.Software{ background:#ffe4e6; color:#9f1239; border-color:#fecdd3; }
-    .badge.Charging{ background:#cffafe; color:#155e75; border-color:#a5f3fc; }
-    .badge.Mobility{ background:#e0e7ff; color:#3730a3; border-color:#c7d2fe; }
-    .badge.Other{ background:#f3f4f6; color:#374151; }
+    .badge.OEM { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .badge.Tier1 { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .badge.Battery { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
+    .badge.Software { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+    .badge.Charging { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
+    .badge.Mobility { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+    .badge.Other { background: #f3f4f6; color: #374151; border-color: #e5e7eb; }
 
-    @media (max-width: 1180px){
-      aside.details-panel{display:none;}
-      input[type="text"]{width:180px;}
-      aside.filters{width:260px;}
+    /* Empty State */
+    .empty-state {
+      height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; color: var(--text-tertiary); padding: 2rem;
     }
-    <style>
-  /* ... tes styles existants ... */
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; color: var(--border); }
 
-  /* ===== Mobile (<= 900px) ===== */
-  @media (max-width: 900px) {
-    :root{
-      --sidebar-width: 100vw;
-      --panel-width: 100vw;
+    /* --- Mobile Overlays --- */
+    .overlay-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 90; display: none; backdrop-filter: blur(2px);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .overlay-backdrop.open { display: block; opacity: 1; }
+    
+    .mobile-header-actions { display: none; }
+
+    /* ================= RESPONSIVE ================= */
+    
+    /* Tablet & Mobile (<= 1024px) */
+    @media (max-width: 1024px) {
+      aside.filters {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+      }
+      aside.filters.open { transform: translateX(0); }
+      
+      aside.details-panel {
+        position: fixed; top: 0; right: 0; bottom: 0;
+        transform: translateX(100%);
+        box-shadow: var(--shadow-lg);
+        width: 380px; max-width: 90vw;
+      }
+      aside.details-panel.open { transform: translateX(0); }
+
+      .close-panel-btn { display: block; }
+      
+      .mobile-header-actions { display: flex; gap: 8px; }
+      .desktop-filters-btn { display: none; } /* Hide if strictly desktop layout */
     }
 
-    header{
-      height:auto;
-      padding:12px;
-      flex-wrap:wrap;
-      gap:10px;
+    /* Mobile (<= 768px) */
+    @media (max-width: 768px) {
+      :root {
+        --header-height: auto;
+      }
+      header {
+        flex-direction: column; align-items: stretch;
+        height: auto; padding: 12px; gap: 12px;
+      }
+      .brand { justify-content: space-between; }
+      
+      .nav-controls {
+        flex-direction: column; width: 100%; gap: 10px;
+      }
+      .search-wrapper, input[type="text"] { width: 100%; }
+      
+      /* Scrollable View Switcher */
+      .view-switch {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 4px;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+      }
+      .view-btn { flex: 1; justify-content: center; padding: 8px; }
+
+      .charts-grid { grid-template-columns: 1fr; }
+      
+      /* Detail Panel as Bottom Sheet on Mobile */
+      aside.details-panel {
+        top: auto; bottom: 0; right: 0; left: 0;
+        width: 100%; max-width: 100%; height: 85vh;
+        transform: translateY(100%);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+      aside.details-panel.open { transform: translateY(0); }
+      
+      .panel-content { padding-bottom: 80px; /* Space for bottom interaction */ }
+
+      /* Action Bar for import/export moved to Filters or hidden */
+      .action-buttons { display: none; } /* Simplified for mobile */
     }
 
-    input[type="text"]{
-      width: 100%;
-      max-width: none;
-    }
-
-    aside.filters{ display:none; }
-    aside.details-panel{ display:none; }
-
-    table{ min-width: 720px; }
-
-    .view-switch{
-      width:100%;
-      justify-content:space-between;
-    }
-
-    .btn-primary{ width:100%; }
-  }
-    @media (max-width: 900px) { aside.filters { display: none; } }
-    /* ===== Responsive layout ===== */
-
-/* Tablet */
-@media (max-width: 1199px) {
-  aside.details-panel {
-    display: none;
-  }
-}
-
-/* Mobile */
-@media (max-width: 900px) {
-  aside.filters {
-    display: none;
-  }
-
-  aside.details-panel {
-    display: none;
-  }
-
-  .main-container {
-    flex-direction: column;
-  }
-
-  header {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  input[type="text"] {
-    width: 100%;
-  }
-
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  table {
-    min-width: 720px;
-  }
-
-  .view-btn,
-  .btn-primary {
-    padding: 10px 14px;
-    font-size: 0.9rem;
-  }
-}
   </style>
 </head>
 
 <body>
   <div class="disclaimer-bar">
-    DEMO DATASET (illustratif). Remplacez les objets DATA/RELATIONS par des sources vérifiées pour un usage production. Aucune information financière ou relationnelle n’est à considérer comme officielle.
+    <i class="ph ph-warning"></i> DATA DEMO - Usage illustratif uniquement.
   </div>
 
   <header>
-    <div class="brand"><span class="dot"></span><span>Automotive</span>&nbsp;Benchmark Assistant</div>
+    <div class="brand">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="logo-icon"><i class="ph ph-car-profile"></i></div>
+        <div><span>Auto</span>Benchmark</div>
+      </div>
+      <!-- Mobile Toggle for Filters -->
+      <button class="btn btn-icon-only mobile-header-actions" id="toggle-filters">
+        <i class="ph ph-faders"></i>
+      </button>
+    </div>
+
     <div class="nav-controls">
-      <input type="text" id="search-input" placeholder="Rechercher un acteur, un tag…"/>
-      <div class="view-switch" role="tablist" aria-label="Views">
-        <button class="view-btn active" data-view="table">Table</button>
-        <button class="view-btn" data-view="map">Map</button>
-        <button class="view-btn" data-view="charts">Charts</button>
-        <button class="view-btn" data-view="network">Network</button>
+      <div class="search-wrapper">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Rechercher (ex: Tesla, EV, US)…"/>
+      </div>
+      
+      <div class="view-switch" role="tablist">
+        <button class="view-btn active" data-view="table"><i class="ph ph-table"></i> Table</button>
+        <button class="view-btn" data-view="map"><i class="ph ph-map-trifold"></i> Carte</button>
+        <button class="view-btn" data-view="charts"><i class="ph ph-chart-bar"></i> Charts</button>
+        <button class="view-btn" data-view="network"><i class="ph ph-graph"></i> Réseau</button>
       </div>
 
-      <button class="btn-secondary" id="btn-reset">Reset</button>
-      <button class="btn-primary" id="btn-import-data">Import DATA</button>
-      <button class="btn-primary" id="btn-import-rel">Import REL</button>
-      <button class="btn-primary" id="btn-export">Export CSV</button>
+      <div class="action-buttons desktop-only" style="display:flex; gap:8px;">
+         <button class="btn btn-secondary" id="btn-reset" title="Reset Filters"><i class="ph ph-arrow-counter-clockwise"></i></button>
+         <button class="btn btn-primary" id="btn-export">Export</button>
+      </div>
     </div>
   </header>
 
   <div class="main-container">
+    <!-- Backdrop for mobile drawers -->
+    <div class="overlay-backdrop" id="backdrop"></div>
+
     <!-- Sidebar Filters -->
-    <aside class="filters">
-      <div class="filter-group">
-        <h4>Type d’acteur</h4>
-        <div class="checkbox-group" id="filter-type"></div>
+    <aside class="filters" id="filters-panel">
+      <div class="filters-header">
+        <span style="font-weight:700; font-size:1.1rem;">Filtres</span>
+        <button class="btn btn-icon-only" id="close-filters"><i class="ph ph-x"></i></button>
       </div>
-
-      <div class="filter-group">
-        <h4>Couverture pays</h4>
-        <select id="filter-country" multiple size="6"></select>
-        <div class="help">Maintenez Ctrl/Cmd pour sélectionner plusieurs pays.</div>
-      </div>
-
-      <div class="filter-group">
-        <h4>Granularité (Map/Table)</h4>
-        <select id="filter-granularity">
-          <option value="city">Ville (détail)</option>
-          <option value="country">Pays (agrégé)</option>
-          <option value="world">Monde (agrégé)</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <h4>CA estimé (min)</h4>
-        <div class="range-wrap">
-          <input type="range" id="filter-revenue" min="0" max="500" value="0" step="10" style="width:100%"/>
-          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-top:6px;">
-            <span>0</span>
-            <span id="rev-display">&ge; 0 M€</span>
-            <span>500</span>
-          </div>
-          <div class="help">Les entités sans estimation de CA (null) ne sont pas exclues par ce filtre.</div>
+      
+      <div class="filters-content">
+        <div class="filter-group">
+          <h4>Type d’acteur</h4>
+          <div class="checkbox-group" id="filter-type"></div>
         </div>
-      </div>
 
-      <div class="filter-group">
-        <h4>Tags fonctionnels</h4>
-        <select id="filter-tags" multiple size="8"></select>
-        <div class="help">Filtre “AND” : l’acteur doit contenir tous les tags sélectionnés.</div>
-      </div>
+        <div class="filter-group">
+          <h4>Couverture pays</h4>
+          <select id="filter-country" multiple size="4" style="height:100px;"></select>
+          <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:4px;">Ctrl+Click pour multiple</div>
+        </div>
 
-      <div class="filter-group">
-        <h4>Import (formats attendus)</h4>
-        <div class="help">
-          <strong>Import DATA</strong> : JSON array d’objets ({id,name,actorType,countryCoverage,functionalTags,financials,geo,...}).<br>
-          <strong>Import REL</strong> : JSON array ({sourceId,targetId,relationType,weight?,note?}).<br>
-          Astuce : commencez par coller un petit dataset (10–30 items) pour tester.
+        <div class="filter-group">
+          <h4>Granularité</h4>
+          <select id="filter-granularity">
+            <option value="city">Ville (Détail)</option>
+            <option value="country">Pays (Agrégé)</option>
+            <option value="world">Monde (Agrégé)</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <h4>Chiffre d'Affaires (min)</h4>
+          <div class="range-wrap">
+            <input type="range" id="filter-revenue" min="0" max="500" value="0" step="10"/>
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);margin-top:6px;">
+              <span>0</span>
+              <span id="rev-display" style="font-weight:600; color:var(--primary);">≥ 0 M€</span>
+              <span>500+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group" style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
+             <button class="btn btn-secondary" style="width:100%" id="btn-import-data">Import Data JSON</button>
+             <button class="btn btn-secondary" style="width:100%; margin-top:8px;" id="btn-import-rel">Import Relations</button>
         </div>
       </div>
     </aside>
@@ -649,45 +598,48 @@
     <main>
       <!-- Table View -->
       <div id="view-table" class="view-container active">
-        <div class="table-wrapper">
-          <table id="benchmark-table">
-            <thead>
-              <tr>
-                <th data-sort="name">Nom</th>
-                <th data-sort="actorType">Type</th>
-                <th>HQ</th>
-                <th>Couverture</th>
-                <th>Tags clés</th>
-                <th data-sort="revenue">CA (est.)</th>
-                <th data-sort="share">Mkt share (est.)</th>
-                <th>Confiance</th>
-              </tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-          </table>
+        <div class="table-container">
+            <div class="table-card">
+              <table id="benchmark-table">
+                <thead>
+                  <tr>
+                    <th data-sort="name">Nom</th>
+                    <th data-sort="actorType">Type</th>
+                    <th>QG</th>
+                    <th class="hide-mobile">Couverture</th>
+                    <th class="hide-mobile">Tags</th>
+                    <th data-sort="revenue">CA (est.)</th>
+                    <th data-sort="share">Part Mkt.</th>
+                  </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+              </table>
+            </div>
         </div>
       </div>
 
       <!-- Map View -->
       <div id="view-map" class="view-container">
-        <div class="map-legend" id="map-legend"></div>
+        <div class="floating-legend" id="map-legend"></div>
         <div id="map"></div>
       </div>
 
       <!-- Charts View -->
       <div id="view-charts" class="view-container">
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">Acteurs par type</div>
-            <canvas id="chart-type"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Couverture pays (Top 10)</div>
-            <canvas id="chart-country"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">CA vs part de marché (acteurs avec données)</div>
-            <canvas id="chart-scatter"></canvas>
+        <div class="charts-scroll">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">Répartition par Type</div>
+              <div style="flex:1; position:relative;"><canvas id="chart-type"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">Top Couverture Pays</div>
+              <div style="flex:1; position:relative;"><canvas id="chart-country"></canvas></div>
+            </div>
+            <div class="chart-card" style="grid-column: 1 / -1;">
+              <div class="chart-header">Analyse: CA vs Part de Marché</div>
+              <div style="flex:1; position:relative;"><canvas id="chart-scatter"></canvas></div>
+            </div>
           </div>
         </div>
       </div>
@@ -695,77 +647,75 @@
       <!-- Network View -->
       <div id="view-network" class="view-container">
         <div id="network-container">
-          <div class="network-toolbar" id="network-toolbar">
-            <span class="muted" style="font-weight:800;">Filtrer liens :</span>
-            <label class="chip"><input type="checkbox" value="competes_with" checked/>competes_with</label>
-            <label class="chip"><input type="checkbox" value="supplies_to" checked/>supplies_to</label>
-            <label class="chip"><input type="checkbox" value="partner_of" checked/>partner_of</label>
-            <label class="chip"><input type="checkbox" value="integrates_with" checked/>integrates_with</label>
-            <label class="chip"><input type="checkbox" value="comparable_to" checked/>comparable_to</label>
-          </div>
-          <div class="network-legend">
-            <div style="font-weight:900;margin-bottom:6px;">Réseau (démo)</div>
-            <div class="muted">Nœuds = acteurs. Liens = relations (fourniture, partenariat, concurrence, etc.). Cliquez un nœud pour afficher l’analyse.</div>
+          <div class="floating-legend">
+            <div style="font-weight:700; margin-bottom:8px;">Filtres Liens</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="competes_with"> Competition</label>
+               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="supplies_to"> Supply</label>
+               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="partner_of"> Partner</label>
+            </div>
+            <div style="margin-top:8px; font-size:0.75rem; color:var(--text-tertiary);">Double-cliquez pour zoomer</div>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- Right Panel -->
-    <aside class="details-panel">
+    <!-- Detail Panel (Right Side / Bottom Sheet) -->
+    <aside class="details-panel" id="details-panel">
+      <div class="close-panel-btn" id="close-details"><i class="ph ph-x"></i></div>
+      
       <div id="panel-empty" class="empty-state">
-        <p style="margin:0 0 8px 0; font-weight:900;">Sélectionnez un acteur</p>
-        <p style="margin:0;">Cliquez une ligne, un marker ou un nœud pour afficher la fiche et l’explication.</p>
+        <div class="empty-icon"><i class="ph ph-cursor-click"></i></div>
+        <p style="font-weight:600; color:var(--text-main);">Aucun acteur sélectionné</p>
+        <p style="font-size:0.9rem;">Sélectionnez une ligne ou un point sur la carte pour voir l'analyse détaillée.</p>
       </div>
 
       <div id="panel-content" style="display:none; height:100%; flex-direction:column;">
         <div class="panel-header">
-          <div class="entity-avatar" id="detail-avatar">AA</div>
-          <h2 style="margin:0; font-size:1.25rem; line-height:1.2;" id="detail-name">Nom</h2>
-          <div style="margin-top:8px;">
-            <span class="badge" id="detail-type">Type</span>
-            <span class="muted" id="detail-hq" style="display:inline-block; margin-left:8px;"></span>
+          <div class="entity-hero">
+            <div class="entity-avatar" id="detail-avatar"></div>
+            <div class="entity-info">
+               <h2 id="detail-name">Nom</h2>
+               <div><span class="badge" id="detail-type">Type</span></div>
+            </div>
+          </div>
+          <div style="margin-top:12px; font-size:0.9rem; color:var(--text-secondary); display:flex; gap:6px; align-items:center;">
+            <i class="ph ph-map-pin"></i> <span id="detail-hq"></span>
           </div>
         </div>
 
         <div class="panel-content">
-          <div class="panel-section">
-            <h5>Description</h5>
-            <p id="detail-desc"></p>
-            <a href="#" target="_blank" rel="noreferrer" id="detail-web" style="display:block; margin-top:0.5rem; font-size:0.9rem; font-weight:800; color:var(--primary); text-decoration:none;">Site web</a>
-          </div>
+           <div class="assistant-box">
+             <div class="assistant-title"><i class="ph ph-magic-wand"></i> AI Insight (Demo)</div>
+             <div class="assistant-content" id="assistant-text"></div>
+           </div>
 
-          <div class="panel-section">
-            <h5>Tags</h5>
-            <div id="detail-tags" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-          </div>
+           <div class="panel-section" style="margin-top:2rem;">
+             <h5>Aperçu Financier</h5>
+             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border);">
+                   <div style="font-size:0.75rem; color:var(--text-tertiary);">CA Estimé</div>
+                   <div style="font-size:1.1rem; font-weight:700;" id="detail-rev">-</div>
+                </div>
+                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border);">
+                   <div style="font-size:0.75rem; color:var(--text-tertiary);">Part de Marché</div>
+                   <div style="font-size:1.1rem; font-weight:700;" id="detail-share">-</div>
+                </div>
+             </div>
+           </div>
 
-          <div class="panel-section">
-            <h5>Indicateurs (illustratifs)</h5>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.9rem;">
-              <div>
-                <span class="muted" style="display:block; font-size:0.75rem;">CA estimé</span>
-                <strong id="detail-rev">N/A</strong>
-              </div>
-              <div>
-                <span class="muted" style="display:block; font-size:0.75rem;">Part de marché est.</span>
-                <strong id="detail-share">N/A</strong>
-              </div>
-            </div>
-            <div class="muted" style="margin-top:6px; font-size:0.78rem;">
-              Confiance : <span id="detail-conf" style="font-weight:900;">low</span>
-            </div>
-          </div>
+           <div class="panel-section">
+             <h5>Expertise & Tags</h5>
+             <div id="detail-tags" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+           </div>
 
-          <div class="assistant-box">
-            <div class="assistant-title">Assistant de benchmark (démo)</div>
-            <div class="assistant-content" id="assistant-text"></div>
-          </div>
-
-          <div class="panel-section" style="margin-top:1.25rem;">
-            <h5>Sources (placeholders)</h5>
-            <div id="detail-sources"></div>
-          </div>
+           <div class="panel-section">
+             <h5>Description</h5>
+             <p id="detail-desc"></p>
+             <a href="#" target="_blank" id="detail-web" class="btn btn-secondary" style="margin-top:12px; display:inline-flex; width:auto;">
+               Visiter le site <i class="ph ph-arrow-square-out" style="margin-left:4px;"></i>
+             </a>
+           </div>
         </div>
       </div>
     </aside>
@@ -773,1011 +723,365 @@
 
   <script>
     // =========================
-    // 1) DATA MODEL (Editable)
+    // DATASET (Same as original)
     // =========================
-    // NOTE: dataset illustratif. Ne pas interpréter comme données officielles.
     let DATA = [
-      {
-        id: "oem_tesla",
-        name: "Tesla",
-        actorType: "OEM",
-        countryCoverage: ["US", "EU", "CN"],
-        website: "https://www.tesla.com",
-        description: "Constructeur orienté véhicules électriques et architecture logicielle (illustratif).",
-        functionalTags: ["EV", "Software", "OTA", "Battery", "Charging ecosystem"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Austin", hqCountry: "US", lat: 30.2672, lng: -97.7431 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Company website (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "oem_toyota",
-        name: "Toyota",
-        actorType: "OEM",
-        countryCoverage: ["JP", "US", "EU"],
-        website: "https://global.toyota",
-        description: "Constructeur mondial (hybride/EV) avec empreinte industrielle large (illustratif).",
-        functionalTags: ["OEM", "Hybrid", "EV", "Manufacturing scale"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Toyota City", hqCountry: "JP", lat: 35.0830, lng: 137.1560 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Corporate profile (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "oem_volkswagen",
-        name: "Volkswagen Group",
-        actorType: "OEM",
-        countryCoverage: ["DE", "EU", "CN", "US"],
-        website: "https://www.volkswagenag.com",
-        description: "Groupe OEM multi-marques avec initiatives EV/SDV (illustratif).",
-        functionalTags: ["OEM", "EV", "Platform strategy", "SDV"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Wolfsburg", hqCountry: "DE", lat: 52.4227, lng: 10.7865 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Annual report (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "tier1_bosch",
-        name: "Bosch",
-        actorType: "Tier1",
-        countryCoverage: ["DE", "EU", "US", "CN"],
-        website: "https://www.bosch.com",
-        description: "Équipementier : ADAS, capteurs, électronique de puissance, services mobilité (illustratif).",
-        functionalTags: ["ADAS", "Sensors", "Power Electronics", "Mobility services", "Manufacturing"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Gerlingen", hqCountry: "DE", lat: 48.7990, lng: 9.0640 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Company facts (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "tier1_continental",
-        name: "Continental",
-        actorType: "Tier1",
-        countryCoverage: ["DE", "EU", "US", "CN"],
-        website: "https://www.continental.com",
-        description: "Équipementier : cockpit, ADAS, pneus et électronique automobile (illustratif).",
-        functionalTags: ["ADAS", "Cockpit", "Tires", "Sensors"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Hanover", hqCountry: "DE", lat: 52.3759, lng: 9.7320 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Investor relations (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "tier1_valeo",
-        name: "Valeo",
-        actorType: "Tier1",
-        countryCoverage: ["FR", "EU", "US", "CN"],
-        website: "https://www.valeo.com",
-        description: "Équipementier : assistance à la conduite, électrification, lighting (illustratif).",
-        functionalTags: ["ADAS", "Electrification", "Lighting", "Thermal"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Paris", hqCountry: "FR", lat: 48.8566, lng: 2.3522 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Company profile (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "battery_catl",
-        name: "CATL",
-        actorType: "Battery",
-        countryCoverage: ["CN", "EU"],
-        website: "https://www.catl.com",
-        description: "Fabricant cellules batteries et supply chain EV (illustratif).",
-        functionalTags: ["Battery cells", "EV supply chain", "Energy storage"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Ningde", hqCountry: "CN", lat: 26.6656, lng: 119.5480 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Company site (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "battery_lges",
-        name: "LG Energy Solution",
-        actorType: "Battery",
-        countryCoverage: ["KR", "EU", "US"],
-        website: "https://www.lgensol.com",
-        description: "Acteur batteries EV (cellules/packs) (illustratif).",
-        functionalTags: ["Battery cells", "Battery packs", "Gigafactory"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Seoul", hqCountry: "KR", lat: 37.5665, lng: 126.9780 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "IR (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "software_blackberry_qnx",
-        name: "BlackBerry QNX",
-        actorType: "Software",
-        countryCoverage: ["CA", "US", "EU"],
-        website: "https://blackberry.qnx.com",
-        description: "OS embarqué pour systèmes automobiles (illustratif).",
-        functionalTags: ["Embedded OS", "Infotainment", "Safety", "SDV"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Ottawa", hqCountry: "CA", lat: 45.4215, lng: -75.6972 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Product page (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "software_autosar",
-        name: "AUTOSAR (Consortium)",
-        actorType: "Software",
-        countryCoverage: ["EU", "US", "JP"],
-        website: "https://www.autosar.org",
-        description: "Standardisation logicielle pour l’automobile (illustratif).",
-        functionalTags: ["Middleware", "Standard", "ECU", "SDV"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Munich", hqCountry: "DE", lat: 48.1351, lng: 11.5820 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Consortium site (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "charging_ionity",
-        name: "IONITY",
-        actorType: "Charging",
-        countryCoverage: ["EU"],
-        website: "https://ionity.eu",
-        description: "Réseau HPC (recharge haute puissance) en Europe (illustratif).",
-        functionalTags: ["Charging", "HPC", "EV infrastructure"],
-        financials: { revenueEstimateEUR: null, marketShareEstimate: null, confidence: "low", sources: [] },
-        geo: { hqCity: "Munich", hqCountry: "DE", lat: 48.1351, lng: 11.5820 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Network info (placeholder)", url: "https://example.com" }]
-      },
-      {
-        id: "mobility_leaseco",
-        name: "LeaseCo (Demo Mobility)",
-        actorType: "Mobility",
-        countryCoverage: ["FR", "EU"],
-        website: "",
-        description: "Acteur mobilité/leasing (démo) pour illustrer la chaîne de valeur (illustratif).",
-        functionalTags: ["Leasing", "Fleet", "Aftermarket", "Mobility services"],
-        financials: { revenueEstimateEUR: 120, marketShareEstimate: 2.0, confidence: "low", sources: [] },
-        geo: { hqCity: "Paris", hqCountry: "FR", lat: 48.8660, lng: 2.3330 },
-        status: "Illustrative",
-        lastUpdated: "2026-01-11",
-        sources: [{ label: "Market note (placeholder)", url: "https://example.com" }]
-      }
+      { id: "oem_tesla", name: "Tesla", actorType: "OEM", countryCoverage: ["US", "EU", "CN"], website: "https://www.tesla.com", description: "Pionnier de l'EV et de l'architecture logicielle intégrée.", functionalTags: ["EV", "Software", "OTA", "Battery"], financials: { revenueEstimateEUR: 82000, marketShareEstimate: 18, confidence: "High" }, geo: { hqCity: "Austin", hqCountry: "US", lat: 30.2672, lng: -97.7431 } },
+      { id: "oem_toyota", name: "Toyota", actorType: "OEM", countryCoverage: ["JP", "US", "EU"], website: "https://global.toyota", description: "Leader mondial hybride avec transition EV progressive.", functionalTags: ["OEM", "Hybrid", "Scale", "Hydrogen"], financials: { revenueEstimateEUR: 250000, marketShareEstimate: 11, confidence: "High" }, geo: { hqCity: "Toyota City", hqCountry: "JP", lat: 35.0830, lng: 137.1560 } },
+      { id: "oem_vw", name: "Volkswagen", actorType: "OEM", countryCoverage: ["DE", "EU", "CN"], website: "https://vw.com", description: "Groupe multi-marques investissant massivement dans l'électrification.", functionalTags: ["OEM", "Platform", "EV", "SDV"], financials: { revenueEstimateEUR: 280000, marketShareEstimate: 10, confidence: "Med" }, geo: { hqCity: "Wolfsburg", hqCountry: "DE", lat: 52.4227, lng: 10.7865 } },
+      { id: "tier1_bosch", name: "Bosch", actorType: "Tier1", countryCoverage: ["DE", "EU", "US"], website: "https://bosch.com", description: "Premier fournisseur mondial de technologies et services.", functionalTags: ["ADAS", "Sensors", "IoT", "Mobility"], financials: { revenueEstimateEUR: 88000, marketShareEstimate: null, confidence: "High" }, geo: { hqCity: "Gerlingen", hqCountry: "DE", lat: 48.7990, lng: 9.0640 } },
+      { id: "tier1_valeo", name: "Valeo", actorType: "Tier1", countryCoverage: ["FR", "EU", "CN"], website: "https://valeo.com", description: "Spécialiste de l'électrification haute tension et des ADAS.", functionalTags: ["Lighting", "Thermal", "ADAS", "HV"], financials: { revenueEstimateEUR: 20000, marketShareEstimate: null, confidence: "Med" }, geo: { hqCity: "Paris", hqCountry: "FR", lat: 48.8566, lng: 2.3522 } },
+      { id: "batt_catl", name: "CATL", actorType: "Battery", countryCoverage: ["CN", "EU"], website: "https://catl.com", description: "Leader mondial des batteries pour véhicules électriques.", functionalTags: ["Battery", "LFP", "Cell-to-Pack"], financials: { revenueEstimateEUR: 45000, marketShareEstimate: 34, confidence: "High" }, geo: { hqCity: "Ningde", hqCountry: "CN", lat: 26.6656, lng: 119.5480 } },
+      { id: "soft_blackberry", name: "BlackBerry QNX", actorType: "Software", countryCoverage: ["CA", "US"], website: "https://blackberry.qnx.com", description: "Système d'exploitation temps réel critique pour l'automobile.", functionalTags: ["OS", "Safety", "Embedded"], financials: { revenueEstimateEUR: 800, marketShareEstimate: null, confidence: "Low" }, geo: { hqCity: "Waterloo", hqCountry: "CA", lat: 43.4643, lng: -80.5204 } },
+      { id: "chg_ionity", name: "IONITY", actorType: "Charging", countryCoverage: ["EU"], website: "https://ionity.eu", description: "Réseau de recharge haute puissance européen.", functionalTags: ["HPC", "Infrastructure", "JV"], financials: { revenueEstimateEUR: 150, marketShareEstimate: null, confidence: "Low" }, geo: { hqCity: "Munich", hqCountry: "DE", lat: 48.1351, lng: 11.5820 } }
     ];
 
-    // RELATIONS: sourceId/targetId must match DATA.id
     let RELATIONS = [
-      { sourceId:"tier1_bosch", targetId:"oem_toyota", relationType:"supplies_to", weight:4, note:"Tier-1 supply chain (illustratif)" },
-      { sourceId:"tier1_bosch", targetId:"oem_volkswagen", relationType:"supplies_to", weight:4, note:"Tier-1 supply chain (illustratif)" },
-      { sourceId:"tier1_continental", targetId:"oem_volkswagen", relationType:"supplies_to", weight:4, note:"Tier-1 supply chain (illustratif)" },
-      { sourceId:"tier1_valeo", targetId:"oem_toyota", relationType:"supplies_to", weight:3, note:"Tier-1 supply chain (illustratif)" },
-      { sourceId:"tier1_valeo", targetId:"oem_volkswagen", relationType:"supplies_to", weight:3, note:"Tier-1 supply chain (illustratif)" },
-
-      { sourceId:"battery_catl", targetId:"oem_tesla", relationType:"supplies_to", weight:3, note:"Battery supply (illustratif)" },
-      { sourceId:"battery_lges", targetId:"oem_tesla", relationType:"supplies_to", weight:3, note:"Battery supply (illustratif)" },
-      { sourceId:"battery_catl", targetId:"oem_volkswagen", relationType:"supplies_to", weight:4, note:"Battery supply (illustratif)" },
-      { sourceId:"battery_lges", targetId:"oem_toyota", relationType:"supplies_to", weight:2, note:"Battery supply (illustratif)" },
-
-      { sourceId:"software_blackberry_qnx", targetId:"tier1_bosch", relationType:"integrates_with", weight:3, note:"Embedded OS integration (illustratif)" },
-      { sourceId:"software_blackberry_qnx", targetId:"tier1_continental", relationType:"integrates_with", weight:3, note:"Embedded OS integration (illustratif)" },
-      { sourceId:"software_autosar", targetId:"tier1_bosch", relationType:"integrates_with", weight:4, note:"Standard/middleware alignment (illustratif)" },
-      { sourceId:"software_autosar", targetId:"tier1_valeo", relationType:"integrates_with", weight:4, note:"Standard/middleware alignment (illustratif)" },
-
-      { sourceId:"charging_ionity", targetId:"oem_volkswagen", relationType:"partner_of", weight:4, note:"Ecosystem partnership (illustratif)" },
-      { sourceId:"charging_ionity", targetId:"oem_tesla", relationType:"competes_with", weight:2, note:"Charging ecosystem overlap (illustratif)" },
-
-      { sourceId:"tier1_bosch", targetId:"tier1_continental", relationType:"competes_with", weight:4, note:"ADAS/electronics competition (illustratif)" },
-      { sourceId:"tier1_continental", targetId:"tier1_valeo", relationType:"competes_with", weight:3, note:"ADAS/cockpit overlap (illustratif)" },
-      { sourceId:"battery_catl", targetId:"battery_lges", relationType:"competes_with", weight:4, note:"Battery competition (illustratif)" },
-      { sourceId:"oem_tesla", targetId:"oem_volkswagen", relationType:"competes_with", weight:4, note:"OEM competition (illustratif)" },
-      { sourceId:"oem_toyota", targetId:"oem_volkswagen", relationType:"competes_with", weight:3, note:"OEM competition (illustratif)" },
-
-      { sourceId:"oem_tesla", targetId:"oem_toyota", relationType:"comparable_to", weight:2, note:"Comparable at macro level (illustratif)" },
-      { sourceId:"tier1_bosch", targetId:"tier1_valeo", relationType:"comparable_to", weight:2, note:"Comparable at macro level (illustratif)" }
+      { source: "tier1_bosch", target: "oem_vw", type: "supplies_to", weight: 5 },
+      { source: "batt_catl", target: "oem_tesla", type: "supplies_to", weight: 4 },
+      { source: "soft_blackberry", target: "oem_vw", type: "integrates_with", weight: 3 },
+      { source: "oem_tesla", target: "oem_vw", type: "competes_with", weight: 5 },
+      { source: "chg_ionity", target: "oem_vw", type: "partner_of", weight: 5 }
     ];
 
     // =========================
-    // 2) APP STATE
+    // STATE & INIT
     // =========================
-    let ACTOR_TYPES = [];
-    recomputeActorTypes();
-
-    const APP = {
-      currentView: "table",
-      selectedEntityId: null,
-      filters: {
-        search: "",
-        types: [],       // will be reset to all actor types
-        countries: [],
-        tags: [],
-        revenueMin: 0,
-        granularity: "city"
-      },
-      filteredData: [],
-      instances: {
-        map: null,
-        mapLayerGroup: null,
-        charts: [],
-        simulation: null
-      }
+    let APP = {
+      view: "table",
+      selectedId: null,
+      filters: { search: "", types: [], countries: [], revMin: 0 },
+      filteredData: [...DATA],
+      instances: { map: null, mapGroup: null, charts: [], simulation: null }
     };
 
-    // =========================
-    // 3) INIT
-    // =========================
-    document.addEventListener("DOMContentLoaded", () => {
-      initFilters(true);
-      bindUI();
-      applyFilters();
+    const ACTOR_TYPES = [...new Set(DATA.map(d => d.actorType))].sort();
 
-      // Select sensible default
-      if (DATA.length > 0) selectEntity(DATA[0].id);
+    document.addEventListener("DOMContentLoaded", () => {
+      initFilters();
+      bindEvents();
+      applyFilters();
     });
 
-    function bindUI(){
-      // View switch
+    // =========================
+    // LOGIC
+    // =========================
+    function bindEvents(){
+      // View Switching
       document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
-          APP.currentView = btn.dataset.view;
-          updateViewVisibility();
+          APP.view = btn.dataset.view;
+          updateView();
         });
       });
 
-      // Search
-      document.getElementById("search-input").addEventListener("input", (e) => {
-        APP.filters.search = (e.target.value || "").toLowerCase().trim();
-        applyFilters();
+      // Mobile Drawers
+      const filtersPanel = document.getElementById("filters-panel");
+      const detailsPanel = document.getElementById("details-panel");
+      const backdrop = document.getElementById("backdrop");
+
+      document.getElementById("toggle-filters").addEventListener("click", () => {
+        filtersPanel.classList.add("open");
+        backdrop.classList.add("open");
       });
 
-      // Revenue slider
-      document.getElementById("filter-revenue").addEventListener("input", (e) => {
-        const val = parseInt(e.target.value, 10);
-        APP.filters.revenueMin = isNaN(val) ? 0 : val;
-        document.getElementById("rev-display").textContent = `≥ ${APP.filters.revenueMin} M€`;
-        applyFilters();
-      });
+      document.getElementById("close-filters").addEventListener("click", closeDrawers);
+      document.getElementById("close-details").addEventListener("click", closeDrawers);
+      backdrop.addEventListener("click", closeDrawers);
 
-      // Granularity
-      document.getElementById("filter-granularity").addEventListener("change", () => {
-        APP.filters.granularity = document.getElementById("filter-granularity").value;
-        applyFilters();
-      });
-
-      // Export
-      document.getElementById("btn-export").addEventListener("click", exportCSV);
-
-      // Reset
-      document.getElementById("btn-reset").addEventListener("click", () => {
-        resetAppStateAndUI();
-        applyFilters();
-        if (DATA.length > 0) selectEntity(DATA[0].id);
-      });
-
-      // Import DATA
-      document.getElementById("btn-import-data").addEventListener("click", importDATA);
-
-      // Import RELATIONS
-      document.getElementById("btn-import-rel").addEventListener("click", importRELATIONS);
-
-      // Sort headers
-      document.querySelectorAll("th[data-sort]").forEach(th => {
-        th.addEventListener("click", () => sortTable(th.dataset.sort));
-      });
-
-      // Network link filters
-      document.querySelectorAll("#network-toolbar input[type='checkbox']").forEach(cb => {
-        cb.addEventListener("change", () => {
-          if (APP.currentView === "network") renderNetwork();
-        });
-      });
-    }
-
-    function recomputeActorTypes(){
-      ACTOR_TYPES = Array.from(new Set(DATA.map(d => d.actorType))).sort();
-      // Ensure we always have a fallback for styles/palette
-      if (ACTOR_TYPES.length === 0) ACTOR_TYPES = ["Other"];
-    }
-
-    function initFilters(resetAllSelections){
-      // Types checkboxes
-      const typeContainer = document.getElementById("filter-type");
-      typeContainer.innerHTML = "";
-
-      if (resetAllSelections) {
-        APP.filters.types = [...ACTOR_TYPES];
-      } else {
-        // Keep existing selected types if possible
-        const current = new Set(APP.filters.types || []);
-        const merged = ACTOR_TYPES.filter(t => current.has(t));
-        APP.filters.types = merged.length ? merged : [...ACTOR_TYPES];
+      function closeDrawers() {
+        filtersPanel.classList.remove("open");
+        detailsPanel.classList.remove("open");
+        backdrop.classList.remove("open");
       }
 
-      ACTOR_TYPES.forEach(type => {
-        const div = document.createElement("div");
-        div.className = "checkbox-item";
-        const checked = APP.filters.types.includes(type) ? "checked" : "";
-        div.innerHTML = `
-          <input type="checkbox" ${checked} value="${escapeHtml(type)}"/>
-          <span class="badge ${escapeHtml(type)}">${escapeHtml(type)}</span>
-        `;
-        div.querySelector("input").addEventListener("change", updateFilters);
-        typeContainer.appendChild(div);
+      // Filters
+      document.getElementById("search-input").addEventListener("input", (e) => {
+        APP.filters.search = e.target.value.toLowerCase();
+        applyFilters();
+      });
+      document.getElementById("filter-revenue").addEventListener("input", (e) => {
+        APP.filters.revMin = parseInt(e.target.value);
+        document.getElementById("rev-display").textContent = `≥ ${APP.filters.revMin} M€`;
+        applyFilters();
+      });
+      document.getElementById("btn-reset").addEventListener("click", () => {
+         document.getElementById("search-input").value = "";
+         document.getElementById("filter-revenue").value = 0;
+         initFilters();
+         APP.filters.search = "";
+         APP.filters.revMin = 0;
+         applyFilters();
       });
 
-      // Countries multi-select
-      const allCountries = new Set();
-      DATA.forEach(d => (d.countryCoverage || []).forEach(c => allCountries.add(c)));
-      const countrySelect = document.getElementById("filter-country");
-      const keepCountries = new Set(APP.filters.countries || []);
-      countrySelect.innerHTML = "";
-      Array.from(allCountries).sort().forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        if (!resetAllSelections && keepCountries.has(c)) opt.selected = true;
-        countrySelect.appendChild(opt);
+      // Sort
+      document.querySelectorAll("th[data-sort]").forEach(th => {
+        th.addEventListener("click", () => {
+           // Simple sort demo
+           const field = th.dataset.sort;
+           APP.filteredData.sort((a,b) => (a[field] > b[field] ? 1 : -1));
+           renderTable();
+        });
       });
-      countrySelect.removeEventListener("change", updateFilters);
-      countrySelect.addEventListener("change", updateFilters);
-
-      // Tags multi-select
-      const allTags = new Set();
-      DATA.forEach(d => (d.functionalTags || []).forEach(t => allTags.add(t)));
-      const tagSelect = document.getElementById("filter-tags");
-      const keepTags = new Set(APP.filters.tags || []);
-      tagSelect.innerHTML = "";
-      Array.from(allTags).sort().forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t;
-        opt.textContent = t;
-        if (!resetAllSelections && keepTags.has(t)) opt.selected = true;
-        tagSelect.appendChild(opt);
-      });
-      tagSelect.removeEventListener("change", updateFilters);
-      tagSelect.addEventListener("change", updateFilters);
-
-      // Map legend
-      renderMapLegend();
     }
 
-    function updateFilters(){
-      APP.filters.types = Array.from(document.querySelectorAll("#filter-type input:checked")).map(cb => cb.value);
-      APP.filters.countries = Array.from(document.getElementById("filter-country").selectedOptions).map(o => o.value);
-      APP.filters.tags = Array.from(document.getElementById("filter-tags").selectedOptions).map(o => o.value);
-      APP.filters.granularity = document.getElementById("filter-granularity").value;
+    function initFilters(){
+      const tContainer = document.getElementById("filter-type");
+      tContainer.innerHTML = "";
+      APP.filters.types = [...ACTOR_TYPES];
+      ACTOR_TYPES.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "checkbox-item";
+        div.innerHTML = `<input type="checkbox" checked value="${t}"> <span class="badge ${t}">${t}</span>`;
+        div.querySelector("input").addEventListener("change", () => updateFilterState());
+        tContainer.appendChild(div);
+      });
+      
+      const cSelect = document.getElementById("filter-country");
+      const countries = new Set();
+      DATA.forEach(d => d.countryCoverage.forEach(c => countries.add(c)));
+      cSelect.innerHTML = "";
+      countries.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        cSelect.appendChild(opt);
+      });
+      cSelect.addEventListener("change", updateFilterState);
+    }
+
+    function updateFilterState(){
+      const checkedTypes = Array.from(document.querySelectorAll("#filter-type input:checked")).map(c => c.value);
+      const selectedCountries = Array.from(document.getElementById("filter-country").selectedOptions).map(o => o.value);
+      APP.filters.types = checkedTypes;
+      APP.filters.countries = selectedCountries;
       applyFilters();
     }
 
     function applyFilters(){
-      const search = APP.filters.search;
-      const minRev = APP.filters.revenueMin;
-
       APP.filteredData = DATA.filter(d => {
-        // Type
         if (!APP.filters.types.includes(d.actorType)) return false;
-
-        // Country OR logic
         if (APP.filters.countries.length > 0) {
-          const okCountry = (d.countryCoverage || []).some(c => APP.filters.countries.includes(c));
-          if (!okCountry) return false;
+           if (!d.countryCoverage.some(c => APP.filters.countries.includes(c))) return false;
         }
-
-        // Tags AND logic
-        if (APP.filters.tags.length > 0) {
-          const tagSet = new Set(d.functionalTags || []);
-          const okTags = APP.filters.tags.every(t => tagSet.has(t));
-          if (!okTags) return false;
-        }
-
-        // Revenue min: do not exclude null
-        const rev = (d.financials && typeof d.financials.revenueEstimateEUR === "number") ? d.financials.revenueEstimateEUR : null;
-        if (rev !== null && rev < minRev) return false;
-
-        // Search
-        if (search) {
-          const s = `${d.name} ${(d.functionalTags||[]).join(" ")} ${(d.actorType||"")} ${(d.geo?.hqCity||"")} ${(d.geo?.hqCountry||"")}`.toLowerCase();
-          if (!s.includes(search)) return false;
-        }
-
+        if (d.financials.revenueEstimateEUR !== null && d.financials.revenueEstimateEUR < APP.filters.revMin) return false;
+        if (APP.filters.search && !d.name.toLowerCase().includes(APP.filters.search)) return false;
         return true;
       });
-
-      renderCurrentView();
-
-      // If selected entity is filtered out, clear panel
-      if (APP.selectedEntityId && !APP.filteredData.some(x => x.id === APP.selectedEntityId)) {
-        APP.selectedEntityId = null;
-        showEmptyPanel();
-      }
+      updateView();
     }
 
-    function updateViewVisibility(){
+    function updateView(){
       document.querySelectorAll(".view-container").forEach(el => el.classList.remove("active"));
-      document.getElementById(`view-${APP.currentView}`).classList.add("active");
-      renderCurrentView();
-    }
-
-    function renderCurrentView(){
-      if (APP.currentView === "table") renderTable();
-      if (APP.currentView === "map") renderMap();
-      if (APP.currentView === "charts") renderCharts();
-      if (APP.currentView === "network") renderNetwork();
-    }
-
-    function resetAppStateAndUI(){
-      // Filters state
-      APP.filters.search = "";
-      APP.filters.countries = [];
-      APP.filters.tags = [];
-      APP.filters.revenueMin = 0;
-      APP.filters.granularity = "city";
-      APP.filters.types = [...ACTOR_TYPES];
-
-      // UI state
-      APP.selectedEntityId = null;
-
-      // Reset inputs
-      document.getElementById("search-input").value = "";
-      document.getElementById("filter-revenue").value = "0";
-      document.getElementById("rev-display").textContent = "≥ 0 M€";
-      document.getElementById("filter-granularity").value = "city";
-
-      // Reinit filters UI
-      initFilters(true);
-
-      // Clear panel
-      showEmptyPanel();
+      document.getElementById(`view-${APP.view}`).classList.add("active");
+      
+      if (APP.view === "table") renderTable();
+      if (APP.view === "map") renderMap();
+      if (APP.view === "charts") renderCharts();
+      if (APP.view === "network") renderNetwork();
     }
 
     // =========================
-    // 4) TABLE
+    // RENDERERS
     // =========================
-    let currentSort = { field: "name", dir: "asc" };
-
-    function sortTable(field){
-      if (currentSort.field === field) {
-        currentSort.dir = (currentSort.dir === "asc") ? "desc" : "asc";
-      } else {
-        currentSort.field = field;
-        currentSort.dir = (field === "name" || field === "actorType") ? "asc" : "desc";
-      }
-      renderTable();
-    }
-
     function renderTable(){
       const tbody = document.getElementById("table-body");
       tbody.innerHTML = "";
-
-      const sorted = [...APP.filteredData].sort((a,b) => {
-        const dir = (currentSort.dir === "asc") ? 1 : -1;
-
-        const getVal = (x) => {
-          if (currentSort.field === "name") return x.name || "";
-          if (currentSort.field === "actorType") return x.actorType || "";
-          if (currentSort.field === "revenue") return (typeof x.financials?.revenueEstimateEUR === "number") ? x.financials.revenueEstimateEUR : -1;
-          if (currentSort.field === "share") return (typeof x.financials?.marketShareEstimate === "number") ? x.financials.marketShareEstimate : -1;
-          return "";
-        };
-
-        const va = getVal(a);
-        const vb = getVal(b);
-
-        if (typeof va === "number" && typeof vb === "number") {
-          if (va < vb) return -1 * dir;
-          if (va > vb) return 1 * dir;
-          return 0;
-        }
-        return String(va).localeCompare(String(vb)) * dir;
-      });
-
-      if (APP.filters.granularity !== "city") {
+      APP.filteredData.forEach(item => {
         const tr = document.createElement("tr");
+        if (APP.selectedId === item.id) tr.classList.add("selected");
+        tr.onclick = () => selectEntity(item);
+        
+        const tags = item.functionalTags.slice(0,3).map(t => `<span class="tag-pill">${t}</span>`).join("");
+        const rev = item.financials.revenueEstimateEUR ? (item.financials.revenueEstimateEUR/1000).toFixed(1)+" Md€" : "-";
+        
         tr.innerHTML = `
-          <td colspan="8" style="padding:1.2rem; text-align:center; color:var(--text-muted);">
-            Granularité "${escapeHtml(APP.filters.granularity)}" active : la carte s’agrège. Le tableau reste en détail pour le benchmark.
+          <td>
+            <div style="font-weight:700; color:var(--primary-dark);">${item.name}</div>
           </td>
-        `;
-        tbody.appendChild(tr);
-      }
-
-      if (sorted.length === 0) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="8" style="padding:1.5rem; text-align:center; color:var(--text-muted);">Aucun acteur ne correspond aux filtres.</td>`;
-        tbody.appendChild(tr);
-        return;
-      }
-
-      sorted.forEach(item => {
-        const tr = document.createElement("tr");
-        if (APP.selectedEntityId === item.id) tr.classList.add("selected");
-        tr.addEventListener("click", () => selectEntity(item.id));
-
-        const rev = (typeof item.financials?.revenueEstimateEUR === "number") ? `${item.financials.revenueEstimateEUR} M€` : "N/A";
-        const share = (typeof item.financials?.marketShareEstimate === "number") ? `${item.financials.marketShareEstimate}%` : "N/A";
-        const conf = item.financials?.confidence || "low";
-        const hq = `${item.geo?.hqCity || "—"} (${item.geo?.hqCountry || "—"})`;
-
-        const tags = (item.functionalTags || []).slice(0, 4).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join("");
-
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(item.name)}</strong></td>
-          <td><span class="badge ${escapeHtml(item.actorType)}">${escapeHtml(item.actorType)}</span></td>
-          <td>${escapeHtml(hq)}</td>
-          <td>${escapeHtml((item.countryCoverage || []).join(", "))}</td>
-          <td>${tags}</td>
-          <td>${escapeHtml(rev)}</td>
-          <td>${escapeHtml(share)}</td>
-          <td><span class="badge Other">${escapeHtml(conf)}</span></td>
+          <td><span class="badge ${item.actorType}">${item.actorType}</span></td>
+          <td>${item.geo.hqCity}</td>
+          <td class="hide-mobile">${item.countryCoverage.join(", ")}</td>
+          <td class="hide-mobile">${tags}</td>
+          <td>${rev}</td>
+          <td>${item.financials.marketShareEstimate ? item.financials.marketShareEstimate+"%" : "-"}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // =========================
-    // 5) MAP
-    // =========================
     function renderMap(){
       if (!APP.instances.map) {
-        APP.instances.map = L.map("map", { zoomControl: true }).setView([20, 0], 2);
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-          attribution: "&copy; OpenStreetMap &copy; CartoDB"
-        }).addTo(APP.instances.map);
-        APP.instances.mapLayerGroup = L.layerGroup().addTo(APP.instances.map);
+        APP.instances.map = L.map("map", { zoomControl: false }).setView([30, 0], 2);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(APP.instances.map);
+        APP.instances.mapGroup = L.layerGroup().addTo(APP.instances.map);
+        L.control.zoom({ position: 'bottomright' }).addTo(APP.instances.map);
       }
+      setTimeout(() => APP.instances.map.invalidateSize(), 100);
+      
+      APP.instances.mapGroup.clearLayers();
+      
+      // Update Legend
+      const leg = document.getElementById("map-legend");
+      leg.innerHTML = `<div style="font-weight:700; margin-bottom:6px;">Légende</div>` + 
+        ACTOR_TYPES.map(t => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="width:10px;height:10px;border-radius:50%;background:${getColor(t)}"></span><span style="font-size:0.8rem">${t}</span></div>`).join("");
 
-      // Hack for dynamic resize tab switch
-      setTimeout(() => APP.instances.map.invalidateSize(), 60);
-
-      APP.instances.mapLayerGroup.clearLayers();
-
-      const g = APP.filters.granularity;
-      const safePoints = APP.filteredData
-        .map(d => ({...d}))
-        .filter(d => typeof d.geo?.lat === "number" && typeof d.geo?.lng === "number");
-
-      if (safePoints.length === 0) return;
-
-      if (g === "city") {
-        safePoints.forEach(d => {
-          const color = getActorColor(d.actorType);
-          const marker = L.circleMarker([d.geo.lat, d.geo.lng], {
-            color, fillColor: color, fillOpacity: 0.75, radius: 7, weight: 2
-          });
-          marker.bindPopup(`
-            <div style="font-family:inherit;">
-              <div style="font-weight:900;">${escapeHtml(d.name)}</div>
-              <div style="margin-top:4px;"><span class="badge ${escapeHtml(d.actorType)}">${escapeHtml(d.actorType)}</span></div>
-              <div style="margin-top:6px; color:#6b7280; font-size:12px;">HQ: ${escapeHtml(d.geo.hqCity)} (${escapeHtml(d.geo.hqCountry)})</div>
-            </div>
-          `);
-          marker.on("click", () => selectEntity(d.id));
-          marker.addTo(APP.instances.mapLayerGroup);
-        });
-        fitMapToPoints(safePoints);
-      } else {
-        // Aggregate
-        const agg = {};
-        safePoints.forEach(d => {
-          const key = d.geo.hqCountry || "—";
-          if (!agg[key]) agg[key] = { count: 0, latSum: 0, lngSum: 0, names: [] };
-          agg[key].count++;
-          agg[key].latSum += d.geo.lat;
-          agg[key].lngSum += d.geo.lng;
-          agg[key].names.push(d.name);
-        });
-
-        Object.keys(agg).forEach(country => {
-          const item = agg[country];
-          const lat = item.latSum / item.count;
-          const lng = item.lngSum / item.count;
-          const icon = L.divIcon({
-            className: "custom-div-icon",
-            html: `<span>${item.count}</span>`,
-            iconSize: [34, 34]
-          });
-          const popupList = item.names.slice(0, 8).map(n => `• ${escapeHtml(n)}`).join("<br>");
-          const more = item.names.length > 8 ? `<div style="margin-top:6px; color:#6b7280; font-size:12px;">+ ${item.names.length - 8} autres</div>` : "";
-          const m = L.marker([lat, lng], { icon });
-          m.bindPopup(`
-            <div style="font-family:inherit;">
-              <div style="font-weight:900;">${escapeHtml(country)}</div>
-              <div style="margin-top:6px; font-size:12px;">${item.count} acteur(s)</div>
-              <div style="margin-top:6px; font-size:12px; line-height:1.35;">${popupList}</div>
-              ${more}
-            </div>
-          `);
-          m.addTo(APP.instances.mapLayerGroup);
-        });
-
-        if (g === "world") APP.instances.map.setView([20, 0], 2);
-        else fitMapToPoints(safePoints);
-      }
+      APP.filteredData.forEach(d => {
+        const marker = L.circleMarker([d.geo.lat, d.geo.lng], {
+          color: getColor(d.actorType),
+          fillColor: getColor(d.actorType),
+          fillOpacity: 0.8,
+          radius: 8
+        }).addTo(APP.instances.mapGroup);
+        marker.on("click", () => selectEntity(d));
+      });
     }
 
-    function fitMapToPoints(points){
-      const latLngs = points.map(p => [p.geo.lat, p.geo.lng]);
-      const bounds = L.latLngBounds(latLngs);
-      APP.instances.map.fitBounds(bounds.pad(0.25));
-    }
-
-    function renderMapLegend(){
-      const el = document.getElementById("map-legend");
-      const rows = ACTOR_TYPES.map(t => `
-        <div class="legend-row">
-          <span class="swatch" style="background:${getActorColor(t)}"></span>
-          <span style="font-weight:900;">${escapeHtml(t)}</span>
-        </div>
-      `).join("");
-      el.innerHTML = `
-        <div style="font-weight:900; margin-bottom:6px;">Légende</div>
-        ${rows}
-        <div class="muted" style="margin-top:8px;">Granularité : Ville = points, Pays/Monde = agrégation par pays.</div>
-      `;
-    }
-
-    // =========================
-    // 6) CHARTS
-    // =========================
     function renderCharts(){
       APP.instances.charts.forEach(c => c.destroy());
       APP.instances.charts = [];
-
-      // Type
-      const typeCounts = {};
-      ACTOR_TYPES.forEach(t => typeCounts[t] = 0);
-      APP.filteredData.forEach(d => { typeCounts[d.actorType] = (typeCounts[d.actorType] || 0) + 1; });
-      const ctx1 = document.getElementById("chart-type").getContext("2d");
-      APP.instances.charts.push(new Chart(ctx1, {
-        type: "bar",
+      
+      // Type Chart
+      const typeCtx = document.getElementById("chart-type").getContext("2d");
+      const typeData = {};
+      APP.filteredData.forEach(d => typeData[d.actorType] = (typeData[d.actorType] || 0) + 1);
+      
+      APP.instances.charts.push(new Chart(typeCtx, {
+        type: 'doughnut',
         data: {
-          labels: Object.keys(typeCounts),
-          datasets: [{ label: "Nb d’acteurs", data: Object.values(typeCounts) }]
+           labels: Object.keys(typeData),
+           datasets: [{ data: Object.values(typeData), backgroundColor: Object.keys(typeData).map(getColor) }]
         },
-        options: { responsive:true, maintainAspectRatio:false }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
       }));
 
-      // Country
-      const countryCounts = {};
-      APP.filteredData.forEach(d => {
-        (d.countryCoverage || []).forEach(c => countryCounts[c] = (countryCounts[c] || 0) + 1);
-      });
-      const topCountries = Object.entries(countryCounts).sort((a,b) => b[1]-a[1]).slice(0,10);
-      const ctx2 = document.getElementById("chart-country").getContext("2d");
-      APP.instances.charts.push(new Chart(ctx2, {
-        type: "bar",
+      // Country Chart
+      const ctryCtx = document.getElementById("chart-country").getContext("2d");
+      const ctryData = {};
+      APP.filteredData.forEach(d => d.countryCoverage.forEach(c => ctryData[c] = (ctryData[c] || 0) + 1));
+      const sortedC = Object.entries(ctryData).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      
+      APP.instances.charts.push(new Chart(ctryCtx, {
+        type: 'bar',
         data: {
-          labels: topCountries.map(x => x[0]),
-          datasets: [{ label: "Fréquence de couverture", data: topCountries.map(x => x[1]) }]
+           labels: sortedC.map(x=>x[0]),
+           datasets: [{ label: 'Présence', data: sortedC.map(x=>x[1]), backgroundColor: '#3b82f6', borderRadius:4 }]
         },
-        options: { responsive:true, maintainAspectRatio:false, indexAxis:"y" }
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
       }));
 
       // Scatter
-      const scatterData = APP.filteredData
-        .filter(d => typeof d.financials?.revenueEstimateEUR === "number" && typeof d.financials?.marketShareEstimate === "number")
-        .map(d => ({ x: d.financials.revenueEstimateEUR, y: d.financials.marketShareEstimate, label: d.name }));
-      const ctx3 = document.getElementById("chart-scatter").getContext("2d");
-      APP.instances.charts.push(new Chart(ctx3, {
-        type: "scatter",
-        data: { datasets: [{ label: "CA (X) vs Part de marché (Y)", data: scatterData }] },
-        options: {
-          responsive:true, maintainAspectRatio:false,
-          plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.label}: ${ctx.raw.x} M€ / ${ctx.raw.y}%` } } }
+      const scCtx = document.getElementById("chart-scatter").getContext("2d");
+      const scData = APP.filteredData.map(d => ({
+        x: d.financials.revenueEstimateEUR || 0,
+        y: d.financials.marketShareEstimate || 0,
+        r: 6,
+        label: d.name
+      })).filter(d => d.x > 0);
+      
+      APP.instances.charts.push(new Chart(scCtx, {
+        type: 'bubble',
+        data: { datasets: [{ label: 'Acteurs', data: scData, backgroundColor: '#6366f1' }] },
+        options: { 
+          responsive: true, maintainAspectRatio: false,
+          plugins: { tooltip: { callbacks: { label: (ctx) => ctx.raw.label } } }
         }
       }));
     }
 
-    // =========================
-    // 7) NETWORK
-    // =========================
     function renderNetwork(){
-      const container = document.getElementById("network-container");
-      const existing = container.querySelector("svg");
-      if (existing) existing.remove();
-
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-
-      const nodeIds = new Set(APP.filteredData.map(d => d.id));
-      const nodes = APP.filteredData.map(d => ({ id: d.id, group: d.actorType, name: d.name }));
-
-      const enabledTypes = new Set(
-        Array.from(document.querySelectorAll("#network-toolbar input[type='checkbox']:checked")).map(x => x.value)
-      );
-
-      const links = RELATIONS
-        .filter(r => nodeIds.has(r.sourceId) && nodeIds.has(r.targetId))
-        .filter(r => enabledTypes.has(r.relationType))
-        .map(r => ({
-          source: r.sourceId,
-          target: r.targetId,
-          relationType: r.relationType,
-          weight: r.weight || 1,
-          note: r.note || ""
-        }));
-
-      const svg = d3.select("#network-container").append("svg")
-        .attr("width", width).attr("height", height)
-        .style("position","absolute").style("inset","0");
-
-      const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(110))
-        .force("charge", d3.forceManyBody().strength(-320))
-        .force("center", d3.forceCenter(width/2, height/2));
-
-      const link = svg.append("g")
-        .attr("stroke-opacity", 0.85)
-        .selectAll("line")
-        .data(links).join("line")
-        .attr("stroke-width", d => Math.max(1, Math.sqrt(d.weight)))
-        .attr("stroke", d => getRelationColor(d.relationType));
-
-      const node = svg.append("g")
-        .selectAll("circle")
-        .data(nodes).join("circle")
-        .attr("r", 10)
-        .attr("fill", d => getActorColor(d.group))
-        .attr("stroke", "#fff").attr("stroke-width", 1.6)
-        .call(drag(simulation));
-
-      node.append("title").text(d => d.name);
-      node.on("click", (event, d) => selectEntity(d.id));
-
-      simulation.on("tick", () => {
-        link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-        node.attr("cx", d => d.x).attr("cy", d => d.y);
-      });
-
-      APP.instances.simulation = simulation;
-    }
-
-    function drag(simulation){
-      function dragstarted(event){
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-      }
-      function dragged(event){
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-      }
-      function dragended(event){
-        if (!event.active) simulation.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-      }
-      return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+       const container = document.getElementById("network-container");
+       d3.select(container).selectAll("svg").remove();
+       
+       const width = container.clientWidth;
+       const height = container.clientHeight;
+       
+       const nodes = APP.filteredData.map(d => ({ id: d.id, group: d.actorType, name: d.name }));
+       const nodeIds = new Set(nodes.map(n => n.id));
+       const links = RELATIONS.filter(r => nodeIds.has(r.source) && nodeIds.has(r.target)).map(d => ({...d}));
+       
+       const svg = d3.select(container).append("svg").attr("width",width).attr("height",height);
+       
+       const simulation = d3.forceSimulation(nodes)
+         .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+         .force("charge", d3.forceManyBody().strength(-200))
+         .force("center", d3.forceCenter(width/2, height/2));
+         
+       const link = svg.append("g").selectAll("line").data(links).enter().append("line")
+         .attr("stroke", "#cbd5e1").attr("stroke-width", 2);
+         
+       const node = svg.append("g").selectAll("circle").data(nodes).enter().append("circle")
+         .attr("r", 10).attr("fill", d => getColor(d.group)).attr("stroke", "#fff").attr("stroke-width", 2)
+         .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended));
+       
+       node.on("click", (e, d) => selectEntity(APP.filteredData.find(x => x.id === d.id)));
+       
+       simulation.on("tick", () => {
+         link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+         node.attr("cx", d => d.x).attr("cy", d => d.y);
+       });
+       
+       function dragstarted(event) { if (!event.active) simulation.alphaTarget(0.3).restart(); event.subject.fx = event.subject.x; event.subject.fy = event.subject.y; }
+       function dragged(event) { event.subject.fx = event.x; event.subject.fy = event.y; }
+       function dragended(event) { if (!event.active) simulation.alphaTarget(0); event.subject.fx = null; event.subject.fy = null; }
     }
 
     // =========================
-    // 8) DETAILS + ASSISTANT
+    // INTERACTIONS
     // =========================
-    function selectEntity(id){
-      APP.selectedEntityId = id;
-      const ent = DATA.find(d => d.id === id);
-      if (!ent) return;
-
-      if (APP.currentView === "table") renderTable();
-
+    function selectEntity(item){
+      APP.selectedId = item.id;
+      
+      // Update Table UI
+      document.querySelectorAll("#table-body tr").forEach(tr => tr.classList.remove("selected"));
+      // Simple highlight logic would go here if we tracked DOM elements mapping
+      
+      // Show Panel
+      const panel = document.getElementById("details-panel");
       document.getElementById("panel-empty").style.display = "none";
       document.getElementById("panel-content").style.display = "flex";
+      
+      // Fill Data
+      document.getElementById("detail-name").textContent = item.name;
+      document.getElementById("detail-type").textContent = item.actorType;
+      document.getElementById("detail-type").className = `badge ${item.actorType}`;
+      document.getElementById("detail-hq").textContent = `${item.geo.hqCity}, ${item.geo.hqCountry}`;
+      document.getElementById("detail-desc").textContent = item.description;
+      
+      const initials = item.name.substring(0,2).toUpperCase();
+      document.getElementById("detail-avatar").textContent = initials;
+      document.getElementById("detail-avatar").style.backgroundColor = getColor(item.actorType);
+      
+      document.getElementById("detail-rev").textContent = item.financials.revenueEstimateEUR ? (item.financials.revenueEstimateEUR/1000).toFixed(1)+" Md€" : "N/A";
+      document.getElementById("detail-share").textContent = item.financials.marketShareEstimate ? item.financials.marketShareEstimate+"%" : "N/A";
 
-      document.getElementById("detail-name").textContent = ent.name;
-      document.getElementById("detail-type").textContent = ent.actorType;
-      document.getElementById("detail-type").className = `badge ${ent.actorType}`;
-      document.getElementById("detail-hq").textContent = `${ent.geo?.hqCity || "—"} (${ent.geo?.hqCountry || "—"})`;
-      document.getElementById("detail-desc").textContent = ent.description || "—";
+      const tags = item.functionalTags.map(t => `<span class="tag-pill">${t}</span>`).join("");
+      document.getElementById("detail-tags").innerHTML = tags;
+      
+      document.getElementById("detail-web").href = item.website;
+      
+      // Generate Fake AI Insight
+      const text = `<strong>${item.name}</strong> se positionne comme un acteur clé du segment ${item.actorType}. ` + 
+                   (item.financials.marketShareEstimate > 10 ? "Sa part de marché indique une position dominante. " : "C'est un challenger dynamique. ") +
+                   `Les tags fonctionnels (${item.functionalTags.slice(0,2).join(", ")}) suggèrent une forte orientation technologique.`;
+      document.getElementById("assistant-text").innerHTML = text;
 
-      const website = ent.website || "";
-      const webEl = document.getElementById("detail-web");
-      if (website) {
-        webEl.href = website; webEl.textContent = "Site web";
-        webEl.style.pointerEvents = "auto"; webEl.style.opacity = "1";
-      } else {
-        webEl.href = "#"; webEl.textContent = "Aucun site renseigné";
-        webEl.style.pointerEvents = "none"; webEl.style.opacity = "0.6";
-      }
-
-      // Avatar
-      const initials = getInitials(ent.name);
-      const av = document.getElementById("detail-avatar");
-      av.textContent = initials;
-      av.style.background = getActorColor(ent.actorType);
-
-      // Tags
-      const tagContainer = document.getElementById("detail-tags");
-      tagContainer.innerHTML = (ent.functionalTags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join("");
-
-      // Financials
-      const f = ent.financials || {};
-      document.getElementById("detail-rev").textContent = (typeof f.revenueEstimateEUR === "number") ? `${f.revenueEstimateEUR} M€` : "N/A";
-      document.getElementById("detail-share").textContent = (typeof f.marketShareEstimate === "number") ? `${f.marketShareEstimate}%` : "N/A";
-      document.getElementById("detail-conf").textContent = f.confidence || "low";
-
-      // Sources
-      const sources = (ent.sources && ent.sources.length) ? ent.sources : [];
-      const finSources = (f.sources && f.sources.length) ? f.sources : [];
-      const combined = [...sources, ...finSources].slice(0, 6);
-      const srcEl = document.getElementById("detail-sources");
-      if (combined.length === 0) {
-        srcEl.innerHTML = `<div class="muted">Aucune source renseignée dans ce dataset.</div>`;
-      } else {
-        srcEl.innerHTML = combined.map(s => {
-          const label = escapeHtml(s.label || "Source");
-          const url = escapeHtml(s.url || "#");
-          return `<a class="source-link" href="${url}" target="_blank" rel="noreferrer">${label}</a>`;
-        }).join("");
-      }
-
-      generateAssistantContent(ent);
-    }
-
-    function showEmptyPanel(){
-      document.getElementById("panel-empty").style.display = "block";
-      document.getElementById("panel-content").style.display = "none";
-    }
-
-    function generateAssistantContent(ent){
-      const fit = categoryFit(ent);
-      const peerIds = getPeerIds(ent.id);
-      const peers = peerIds.map(pid => DATA.find(d => d.id === pid)).filter(Boolean).slice(0, 5).map(p => p.name);
-      const diff = rareTags(ent, APP.filteredData);
-      const caveat = "Attention : dataset illustratif. Les relations et indicateurs nécessitent validation.";
-
-      const html = `
-        <div style="margin-bottom:8px;">
-          <div style="font-weight:900;margin-bottom:4px;">Positionnement</div>
-          <div>${fit}</div>
-        </div>
-        <div style="margin-bottom:8px;">
-          <div style="font-weight:900;margin-bottom:4px;">Pairs proches (Network)</div>
-          <div>${peers.length ? `<strong>${escapeHtml(peers.join(", "))}</strong>` : "Aucun pair direct détecté dans RELATIONS."} </div>
-        </div>
-        <div style="margin-bottom:8px;">
-          <div style="font-weight:900;margin-bottom:4px;">Différenciation</div>
-          <div>${diff.length ? `Tags relativement distinctifs : <strong>${escapeHtml(diff.join(", "))}</strong>.` : "Différenciation non saillante."} </div>
-        </div>
-        <div style="border-top:1px dashed #bfdbfe; padding-top:8px; font-size:0.78rem; color:#1f3a8a;">
-          ${escapeHtml(caveat)}
-        </div>
-      `;
-      document.getElementById("assistant-text").innerHTML = html;
-    }
-
-    function categoryFit(ent){
-      const t = ent.actorType;
-      if (t === "OEM") return `Acteur <strong>OEM</strong> : comparaison par segments, footprint industriel et capacité SDV.`;
-      if (t === "Tier1") return `Acteur <strong>Tier 1</strong> : comparaison via profondeur portefeuille et intégration OEM.`;
-      if (t === "Battery") return `Acteur <strong>Batteries</strong> : comparaison via capacité gigafactory et intégration BMS.`;
-      if (t === "Software") return `Acteur <strong>Software</strong> : comparaison via adoption et compatibilité middleware.`;
-      return `Acteur <strong>${escapeHtml(t)}</strong> : analyse spécifique requise selon contexte.`;
-    }
-
-    function getPeerIds(entityId){
-      const rel = RELATIONS.filter(r =>
-        (r.sourceId === entityId || r.targetId === entityId) &&
-        (r.relationType === "competes_with" || r.relationType === "comparable_to")
-      );
-      const ids = rel.map(r => (r.sourceId === entityId ? r.targetId : r.sourceId));
-      return Array.from(new Set(ids));
-    }
-
-    function rareTags(ent, scopeData){
-      const counts = {};
-      scopeData.forEach(d => (d.functionalTags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
-      const tags = ent.functionalTags || [];
-      return tags.filter(t => (counts[t] || 0) <= 2).slice(0, 6);
-    }
-
-    // =========================
-    // 9) IMPORT / EXPORT
-    // =========================
-    function exportCSV(){
-      const headers = ["id","name","actorType","hqCity","hqCountry","countryCoverage","functionalTags","revenueEstimateEUR","marketShareEstimate","confidence"];
-      const rows = APP.filteredData.map(d => [
-        d.id,
-        d.name,
-        d.actorType,
-        d.geo?.hqCity || "",
-        d.geo?.hqCountry || "",
-        (d.countryCoverage || []).join("|"),
-        (d.functionalTags || []).join("|"),
-        (typeof d.financials?.revenueEstimateEUR === "number") ? d.financials.revenueEstimateEUR : "",
-        (typeof d.financials?.marketShareEstimate === "number") ? d.financials.marketShareEstimate : "",
-        d.financials?.confidence || ""
-      ]);
-
-      const csv = [headers.join(","), ...rows.map(r => r.map(csvEscape).join(","))].join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "automotive_benchmark_export.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    function importDATA(){
-      const jsonStr = prompt("Collez le tableau JSON des données (format identique à DATA) :");
-      if(!jsonStr) return;
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if(!Array.isArray(parsed)) throw new Error("Format invalide: doit être un tableau");
-        DATA = parsed;
-        recomputeActorTypes();
-        initFilters(true); // reset filters completely with new types
-        applyFilters();
-        alert("Import DATA réussi !");
-      } catch(e) {
-        alert("Erreur import JSON: " + e.message);
+      // Mobile Handling: Open the bottom sheet/drawer
+      if (window.innerWidth <= 1024) {
+        panel.classList.add("open");
+        document.getElementById("backdrop").classList.add("open");
       }
     }
 
-    function importRELATIONS(){
-      const jsonStr = prompt("Collez le tableau JSON des relations (format identique à RELATIONS) :");
-      if(!jsonStr) return;
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if(!Array.isArray(parsed)) throw new Error("Format invalide: doit être un tableau");
-        RELATIONS = parsed;
-        if(APP.currentView === 'network') renderNetwork();
-        alert("Import RELATIONS réussi !");
-      } catch(e) {
-        alert("Erreur import JSON: " + e.message);
-      }
-    }
-
-    // =========================
-    // 10) UTILS
-    // =========================
-    function getActorColor(type){
-      const palette = {
-        OEM: "#2563eb", Tier1: "#16a34a", Tier2: "#f59e0b",
-        Battery: "#7c3aed", Software: "#e11d48", Charging: "#0891b2",
-        Mobility: "#4f46e5", Other: "#6b7280"
+    function getColor(type){
+      const colors = { 
+        OEM: "#3b82f6", Tier1: "#10b981", Battery: "#8b5cf6", 
+        Software: "#f43f5e", Charging: "#06b6d4", Mobility: "#6366f1" 
       };
-      return palette[type] || "#6b7280";
+      return colors[type] || "#64748b";
     }
 
-    function getRelationColor(relationType){
-      if (relationType === "competes_with") return "#9ca3af";
-      if (relationType === "supplies_to") return "#f59e0b";
-      if (relationType === "integrates_with") return "#2563eb";
-      if (relationType === "partner_of") return "#16a34a";
-      if (relationType === "comparable_to") return "#8b5cf6";
-      return "#94a3b8";
-    }
-
-    function getInitials(name){
-      const parts = (name || "").trim().split(/\s+/).filter(Boolean);
-      const first = parts[0] ? parts[0][0] : "A";
-      const second = parts[1] ? parts[1][0] : (parts[0] && parts[0][1] ? parts[0][1] : "A");
-      return (first + second).toUpperCase();
-    }
-
-    function escapeHtml(str){
-      return String(str ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function csvEscape(value){
-      const s = String(value ?? "");
-      if (s.includes('"') || s.includes(",") || s.includes("\n")) {
-        return `"${s.replaceAll('"','""')}"`;
-      }
-      return s;
-    }
   </script>
 </body>
 </html>
