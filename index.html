@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Automotive Benchmark Ecosystem</title>
+  <title>Benchmark POC - Smart UX</title>
 
   <!-- Fonts & CDNs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,583 +14,192 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-
-  <!-- Icons (Phosphor Icons for modern look) -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <style>
     :root{
-      /* Palette moderne et professionnelle */
-      --primary: #3b82f6; /* Bleu vibrant */
-      --primary-dark: #1d4ed8;
-      --primary-light: #eff6ff;
-      --accent: #6366f1; /* Indigo */
-      
-      --bg-body: #f8fafc;
+      /* Palette & Variables */
+      --primary: #0f172a;       
+      --accent: #2563eb;        
+      --success: #10b981;
+      --bg-body: #f1f5f9;
       --bg-surface: #ffffff;
-      --bg-panel: #ffffff;
-      
-      --text-main: #0f172a;
+      --text-main: #1e293b;
       --text-secondary: #64748b;
-      --text-tertiary: #94a3b8;
-      
       --border: #e2e8f0;
-      --border-hover: #cbd5e1;
-      
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-      
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
       
       --sidebar-width: 300px;
-      --panel-width: 400px;
+      --panel-width: 420px;
       --header-height: 64px;
-      --z-sidebar: 100;
-      --z-panel: 110;
-      --z-header: 50;
+      --radius: 10px;
     }
 
-    /* Reset & Base */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg-body);
-      color: var(--text-main);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      font-size: 14px;
-    }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
 
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-    /* --- Disclaimer --- */
-    .disclaimer-bar {
-      background: #fffbeb;
-      color: #92400e;
-      font-size: 0.75rem;
-      text-align: center;
-      padding: 6px;
-      border-bottom: 1px solid #fcd34d;
-      flex-shrink: 0;
-      font-weight: 500;
-    }
-
-    /* --- Header --- */
-    header {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-      height: var(--header-height);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.5rem;
-      flex-shrink: 0;
-      z-index: var(--z-header);
-      box-shadow: var(--shadow-sm);
-    }
-    .brand {
-      font-weight: 800;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      color: var(--text-main);
-      letter-spacing: -0.02em;
-    }
-    .brand .logo-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 16px;
-    }
-    .brand span { color: var(--primary); }
-
-    .nav-controls {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    /* Input & Buttons */
+    /* Header */
+    header { background: var(--bg-surface); border-bottom: 1px solid var(--border); height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .brand { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 0.8rem; letter-spacing: -0.02em; }
+    .logo-box { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+    
+    .nav-controls { display: flex; gap: 1rem; align-items: center; }
     .search-wrapper { position: relative; }
-    .search-wrapper i {
-      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-      color: var(--text-tertiary); pointer-events: none;
-    }
-    input[type="text"] {
-      padding: 9px 12px 9px 34px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      font-size: 0.9rem;
-      width: 280px;
-      background: var(--bg-body);
-      transition: all 0.2s;
-      font-family: inherit;
-    }
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-light);
-      background: #fff;
-    }
+    .search-wrapper i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size:1.1rem; }
+    input[type="text"] { padding: 10px 12px 10px 38px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; width: 260px; background: var(--bg-body); transition: all 0.2s; font-family:inherit; }
+    input[type="text"]:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 14px;
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-    }
-    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
-    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; font-size: 0.85rem; }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+    .btn-primary:hover { background: #1d4ed8; transform:translateY(-1px); }
     .btn-secondary { background: #fff; border-color: var(--border); color: var(--text-main); }
-    .btn-secondary:hover { background: var(--bg-body); border-color: var(--border-hover); }
-    .btn-icon-only { padding: 8px; font-size: 1.2rem; color: var(--text-secondary); background: transparent; }
-    .btn-icon-only:hover { background: var(--bg-body); color: var(--text-main); }
+    .btn-secondary:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .btn-icon { padding: 8px; font-size: 1.2rem; color: var(--text-secondary); background: transparent; border:none; cursor: pointer; border-radius: var(--radius); }
+    .btn-icon:hover { background: var(--bg-body); color: var(--text-main); }
+    #file-input { display: none; }
 
     /* View Switcher */
-    .view-switch {
-      background: var(--bg-body);
-      padding: 4px;
-      border-radius: var(--radius-md);
-      display: flex;
-      gap: 2px;
-    }
-    .view-btn {
-      border: none;
-      background: transparent;
-      padding: 6px 16px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-weight: 600;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .view-btn:hover { color: var(--text-main); }
-    .view-btn.active {
-      background: #fff;
-      color: var(--primary);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    .view-switch { background: var(--bg-body); padding: 4px; border-radius: var(--radius); display: flex; gap: 4px; }
+    .view-btn { border: none; background: transparent; padding: 6px 14px; cursor: pointer; border-radius: 8px; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 6px; font-size:0.85rem; transition:all 0.2s; }
+    .view-btn.active { background: #fff; color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-    /* --- Layout --- */
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
+    /* Layout */
+    .main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+    
+    /* Sidebar */
+    aside.filters { width: var(--sidebar-width); background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 40; transition: transform 0.3s; }
+    .filters-header { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size:1rem; }
+    .filters-content { padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; }
+    
+    .filter-group h4 { margin: 0 0 0.8rem 0; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; cursor: pointer; user-select: none; font-size: 0.9rem; transition: opacity 0.2s; }
+    .checkbox-item:hover { opacity:0.8; }
+    .checkbox-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+    
+    /* Main */
+    main { flex: 1; position: relative; overflow: hidden; background: var(--bg-body); }
+    .view-container { height: 100%; display: none; }
+    .view-container.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform:translateY(5px); } to { opacity: 1; transform:translateY(0); } }
 
-    /* --- Sidebar Filters --- */
-    aside.filters {
-      width: var(--sidebar-width);
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      z-index: var(--z-sidebar);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .filters-header {
-      padding: 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .filters-content {
-      padding: 1.25rem;
-      overflow-y: auto;
-      display: flex; flex-direction: column; gap: 1.5rem;
-    }
-    
-    .filter-group h4 {
-      margin: 0 0 0.75rem 0;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--text-tertiary);
-      letter-spacing: 0.05em;
-      font-weight: 700;
-    }
-    .checkbox-group { display: flex; flex-direction: column; gap: 0.6rem; }
-    .checkbox-item {
-      display: flex; align-items: center; gap: 0.6rem;
-      font-size: 0.9rem; cursor: pointer; user-select: none;
-    }
-    .checkbox-item input { accent-color: var(--primary); width: 16px; height: 16px; }
-    
-    select {
-      width: 100%; padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      background: var(--bg-body);
-      font-size: 0.9rem;
-    }
-    .range-wrap { padding: 0 4px; }
-    input[type=range] { width: 100%; accent-color: var(--primary); }
-
-    /* --- Main Content --- */
-    main {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: var(--bg-body);
-    }
-    .view-container {
-      height: 100%;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    .view-container.active { display: block; }
-    
     /* Table */
-    .table-container {
-      height: 100%; overflow: auto; padding: 1rem;
-    }
-    .table-card {
-      background: #fff;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
+    .table-wrapper { height: 100%; overflow: auto; padding: 1.5rem; }
+    .table-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     table { width: 100%; border-collapse: collapse; min-width: 800px; }
-    th {
-      background: #f8fafc;
-      padding: 14px 16px;
-      text-align: left;
-      font-weight: 600;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 10;
-      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em;
-    }
-    td {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-      color: var(--text-main);
-    }
-    tr:last-child td { border-bottom: none; }
+    th { background: #f8fafc; padding: 14px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--border); position: sticky; top: 0; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; z-index: 10; }
+    th:hover { color: var(--accent); background: #f1f5f9; }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
     tr { transition: background 0.1s; cursor: pointer; }
-    tr:hover { background: var(--primary-light); }
-    tr.selected { background: #dbeafe; }
+    tr:hover { background: #eff6ff; }
     
-    .tag-pill {
-      display: inline-block;
-      background: #f1f5f9;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 0.75rem; font-weight: 600;
-      color: var(--text-secondary);
-      margin: 2px;
-      border: 1px solid var(--border);
-    }
+    .company-cell { display: flex; align-items: center; gap: 12px; }
 
-    /* Map & Network */
-    #map, #network-container { width: 100%; height: 100%; }
-    
-    .floating-legend {
-      position: absolute; top: 1rem; left: 1rem;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      padding: 1rem;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      z-index: 500;
-      max-width: 280px;
+    /* Map */
+    #map { width: 100%; height: 100%; z-index: 1; }
+    .map-controls {
+      position: absolute; top: 1rem; right: 1rem; z-index: 1000;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(5px);
+      padding: 10px; border-radius: var(--radius); border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; width: 200px;
     }
+    .map-controls label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+    .map-controls select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
+
+    /* Details Panel */
+    aside.details-panel { width: var(--panel-width); background: #fff; border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 60; box-shadow: -4px 0 20px rgba(0,0,0,0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    /* Badges */
+    .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: nowrap; }
+
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+    .kpi-card { background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid var(--border); transition: transform 0.2s; }
+    .kpi-card:hover { transform: translateY(-2px); border-color: #cbd5e1; }
+    .kpi-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .kpi-value { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+    .kpi-sub { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
 
     /* Charts */
-    .charts-scroll {
-      height: 100%; overflow-y: auto; padding: 1.5rem;
-    }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 1.5rem;
-      padding-bottom: 2rem;
-    }
-    .chart-card {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      height: 320px;
-      display: flex; flex-direction: column;
-    }
-    .chart-header { margin-bottom: 1rem; font-weight: 700; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase;}
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; padding: 1.5rem; overflow-y: auto; height: 100%; }
+    .chart-box { background: #fff; padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); height: 350px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
 
-    /* --- Detail Panel (Right) --- */
-    aside.details-panel {
-      width: var(--panel-width);
-      background: var(--bg-surface);
-      border-left: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      flex-shrink: 0;
-      z-index: var(--z-panel);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: -4px 0 15px rgba(0,0,0,0.03);
-    }
-    .panel-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: #fff;
-    }
-    .close-panel-btn {
-      display: none; /* Mobile only */
-      position: absolute; top: 1rem; right: 1rem;
-      background: #f1f5f9; border-radius: 50%; padding: 8px;
-      cursor: pointer;
-    }
-    .entity-hero {
-      display: flex; gap: 1rem; align-items: flex-start;
-    }
-    .entity-avatar {
-      width: 64px; height: 64px;
-      background: var(--primary); color: #fff;
-      border-radius: 18px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 1.5rem;
-      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-      flex-shrink: 0;
-    }
-    .entity-info h2 { margin: 0 0 6px 0; font-size: 1.4rem; line-height: 1.2; letter-spacing: -0.02em; }
-    
-    .panel-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
-    .panel-section { margin-bottom: 2rem; }
-    .panel-section h5 {
-      margin: 0 0 0.8rem 0; font-size: 0.8rem;
-      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);
-    }
-    .panel-section p { line-height: 1.6; color: var(--text-secondary); margin: 0; }
+    /* Mobile */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 30; display: none; backdrop-filter: blur(2px); }
+    .overlay.open { display: block; }
+    .mobile-only { display: none; }
 
-    /* Assistant Box */
-    .assistant-box {
-      background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
-      border: 1px solid #bfdbfe;
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .assistant-box::before {
-      content: ''; position: absolute; top: -10px; right: -10px;
-      width: 60px; height: 60px; background: rgba(255,255,255,0.4);
-      border-radius: 50%;
-    }
-    .assistant-title {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-weight: 700; color: var(--primary-dark);
-      margin-bottom: 0.75rem; font-size: 0.95rem;
-    }
-    .assistant-content { font-size: 0.9rem; color: #1e40af; line-height: 1.5; }
-
-    /* Badges */
-    .badge {
-      display: inline-flex; align-items: center; padding: 4px 10px;
-      border-radius: 6px; font-size: 0.75rem; font-weight: 700;
-      border: 1px solid transparent;
-    }
-    .badge.OEM { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-    .badge.Tier1 { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-    .badge.Battery { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
-    .badge.Software { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
-    .badge.Charging { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
-    .badge.Mobility { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
-    .badge.Other { background: #f3f4f6; color: #374151; border-color: #e5e7eb; }
-
-    /* Empty State */
-    .empty-state {
-      height: 100%; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; color: var(--text-tertiary); padding: 2rem;
-    }
-    .empty-icon { font-size: 3rem; margin-bottom: 1rem; color: var(--border); }
-
-    /* --- Mobile Overlays --- */
-    .overlay-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      z-index: 90; display: none; backdrop-filter: blur(2px);
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .overlay-backdrop.open { display: block; opacity: 1; }
-    
-    .mobile-header-actions { display: none; }
-
-    /* ================= RESPONSIVE ================= */
-    
-    /* Tablet & Mobile (<= 1024px) */
     @media (max-width: 1024px) {
-      aside.filters {
-        position: fixed; top: 0; left: 0; bottom: 0;
-        transform: translateX(-100%);
-        box-shadow: var(--shadow-lg);
-      }
+      aside.filters { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); }
       aside.filters.open { transform: translateX(0); }
-      
-      aside.details-panel {
-        position: fixed; top: 0; right: 0; bottom: 0;
-        transform: translateX(100%);
-        box-shadow: var(--shadow-lg);
-        width: 380px; max-width: 90vw;
-      }
+      aside.details-panel { position: fixed; top: 0; right: 0; bottom: 0; transform: translateX(100%); width: 100%; max-width: 400px; }
       aside.details-panel.open { transform: translateX(0); }
-
-      .close-panel-btn { display: block; }
-      
-      .mobile-header-actions { display: flex; gap: 8px; }
-      .desktop-filters-btn { display: none; } /* Hide if strictly desktop layout */
-    }
-
-    /* Mobile (<= 768px) */
-    @media (max-width: 768px) {
-      :root {
-        --header-height: auto;
-      }
-      header {
-        flex-direction: column; align-items: stretch;
-        height: auto; padding: 12px; gap: 12px;
-      }
-      .brand { justify-content: space-between; }
-      
-      .nav-controls {
-        flex-direction: column; width: 100%; gap: 10px;
-      }
-      .search-wrapper, input[type="text"] { width: 100%; }
-      
-      /* Scrollable View Switcher */
-      .view-switch {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 4px;
-        width: 100%;
-        -webkit-overflow-scrolling: touch;
-      }
-      .view-btn { flex: 1; justify-content: center; padding: 8px; }
-
+      .mobile-only { display: inline-flex; }
+      .desktop-only { display: none !important; }
       .charts-grid { grid-template-columns: 1fr; }
-      
-      /* Detail Panel as Bottom Sheet on Mobile */
-      aside.details-panel {
-        top: auto; bottom: 0; right: 0; left: 0;
-        width: 100%; max-width: 100%; height: 85vh;
-        transform: translateY(100%);
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-      }
-      aside.details-panel.open { transform: translateY(0); }
-      
-      .panel-content { padding-bottom: 80px; /* Space for bottom interaction */ }
-
-      /* Action Bar for import/export moved to Filters or hidden */
-      .action-buttons { display: none; } /* Simplified for mobile */
     }
-
   </style>
 </head>
-
 <body>
-  <div class="disclaimer-bar">
-    <i class="ph ph-warning"></i> DATA DEMO - Usage illustratif uniquement.
-  </div>
+
+  <div class="overlay" id="backdrop"></div>
+  <input type="file" id="file-input" accept=".json,.csv" />
 
   <header>
     <div class="brand">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <div class="logo-icon"><i class="ph ph-car-profile"></i></div>
-        <div><span>Auto</span>Benchmark</div>
-      </div>
-      <!-- Mobile Toggle for Filters -->
-      <button class="btn btn-icon-only mobile-header-actions" id="toggle-filters">
-        <i class="ph ph-faders"></i>
-      </button>
+      <div class="logo-box"><i class="ph ph-globe-hemisphere-west"></i></div>
+      <span>Benchmark<span style="color:var(--accent)">POC</span></span>
+      <button class="btn btn-icon mobile-only" id="toggle-filters" style="margin-left:auto;"><i class="ph ph-faders"></i></button>
     </div>
-
     <div class="nav-controls">
       <div class="search-wrapper">
         <i class="ph ph-magnifying-glass"></i>
-        <input type="text" id="search-input" placeholder="Rechercher (ex: Tesla, EV, US)…"/>
+        <input type="text" id="search-input" placeholder="Rechercher (Entreprise, Industrie)..."/>
       </div>
-      
-      <div class="view-switch" role="tablist">
-        <button class="view-btn active" data-view="table"><i class="ph ph-table"></i> Table</button>
-        <button class="view-btn" data-view="map"><i class="ph ph-map-trifold"></i> Carte</button>
-        <button class="view-btn" data-view="charts"><i class="ph ph-chart-bar"></i> Charts</button>
-        <button class="view-btn" data-view="network"><i class="ph ph-graph"></i> Réseau</button>
+      <div class="view-switch">
+        <button class="view-btn active" data-view="table"><i class="ph ph-table"></i> Matrix</button>
+        <button class="view-btn" data-view="map"><i class="ph ph-map-trifold"></i> Map</button>
+        <button class="view-btn" data-view="charts"><i class="ph ph-chart-pie-slice"></i> Analytics</button>
+        <button class="view-btn" data-view="network"><i class="ph ph-share-network"></i> Ecosystem</button>
       </div>
-
-      <div class="action-buttons desktop-only" style="display:flex; gap:8px;">
-         <button class="btn btn-secondary" id="btn-reset" title="Reset Filters"><i class="ph ph-arrow-counter-clockwise"></i></button>
-         <button class="btn btn-primary" id="btn-export">Export</button>
+      <div class="desktop-only" style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="btn-reset" title="Réinitialiser"><i class="ph ph-arrow-counter-clockwise"></i></button>
+        <button class="btn btn-primary" id="btn-export"><i class="ph ph-download-simple"></i> Export</button>
       </div>
     </div>
   </header>
 
   <div class="main-container">
-    <!-- Backdrop for mobile drawers -->
-    <div class="overlay-backdrop" id="backdrop"></div>
-
-    <!-- Sidebar Filters -->
+    <!-- Filters Sidebar -->
     <aside class="filters" id="filters-panel">
       <div class="filters-header">
-        <span style="font-weight:700; font-size:1.1rem;">Filtres</span>
-        <button class="btn btn-icon-only" id="close-filters"><i class="ph ph-x"></i></button>
+        Configuration
+        <button class="btn btn-icon" id="close-filters"><i class="ph ph-x"></i></button>
       </div>
-      
       <div class="filters-content">
         <div class="filter-group">
-          <h4>Type d’acteur</h4>
-          <div class="checkbox-group" id="filter-type"></div>
+          <h4>Industrie</h4>
+          <div id="filter-industry"></div>
         </div>
-
+        
         <div class="filter-group">
-          <h4>Couverture pays</h4>
-          <select id="filter-country" multiple size="4" style="height:100px;"></select>
-          <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:4px;">Ctrl+Click pour multiple</div>
+          <h4>Couverture Géographique</h4>
+          <select id="filter-coverage" multiple size="4" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:#fff; font-family:inherit; color:var(--text-main);"></select>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">Ctrl+Click pour multiple</div>
         </div>
-
+        
         <div class="filter-group">
-          <h4>Granularité</h4>
-          <select id="filter-granularity">
-            <option value="city">Ville (Détail)</option>
-            <option value="country">Pays (Agrégé)</option>
-            <option value="world">Monde (Agrégé)</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <h4>Chiffre d'Affaires (min)</h4>
-          <div class="range-wrap">
-            <input type="range" id="filter-revenue" min="0" max="500" value="0" step="10"/>
-            <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);margin-top:6px;">
-              <span>0</span>
-              <span id="rev-display" style="font-weight:600; color:var(--primary);">≥ 0 M€</span>
-              <span>500+</span>
-            </div>
+          <h4>Revenue Min ($)</h4>
+          <input type="range" id="filter-revenue" min="0" max="500000000000" step="1000000000" value="0" style="width:100%; accent-color:var(--accent);">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">
+            <span>0</span>
+            <span id="rev-display" style="font-weight:700; color:var(--accent);">$0B+</span>
+            <span>Max</span>
           </div>
         </div>
 
-        <div class="filter-group" style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
-             <button class="btn btn-secondary" style="width:100%" id="btn-import-data">Import Data JSON</button>
-             <button class="btn btn-secondary" style="width:100%; margin-top:8px;" id="btn-import-rel">Import Relations</button>
+        <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
+             <button class="btn btn-secondary" style="width:100%" id="btn-import"><i class="ph ph-file-arrow-up"></i> Import Data</button>
+             <button class="btn btn-secondary mobile-only" style="width:100%; margin-top:8px;" id="btn-reset-mob">Reset</button>
         </div>
       </div>
     </aside>
@@ -598,490 +208,711 @@
     <main>
       <!-- Table View -->
       <div id="view-table" class="view-container active">
-        <div class="table-container">
-            <div class="table-card">
-              <table id="benchmark-table">
-                <thead>
-                  <tr>
-                    <th data-sort="name">Nom</th>
-                    <th data-sort="actorType">Type</th>
-                    <th>QG</th>
-                    <th class="hide-mobile">Couverture</th>
-                    <th class="hide-mobile">Tags</th>
-                    <th data-sort="revenue">CA (est.)</th>
-                    <th data-sort="share">Part Mkt.</th>
-                  </tr>
-                </thead>
-                <tbody id="table-body"></tbody>
-              </table>
-            </div>
+        <div class="table-wrapper">
+          <div class="table-card">
+            <table id="main-table">
+              <thead>
+                <tr>
+                  <th data-sort="company">Entreprise</th>
+                  <th data-sort="industry">Industrie</th>
+                  <th data-sort="revenue_latest" style="text-align:right;">Revenu</th>
+                  <th data-sort="operating_margin_pct" style="text-align:right;">Marge Op.</th>
+                  <th data-sort="market_cap_usd" style="text-align:right;">Market Cap</th>
+                  <th data-sort="employees" style="text-align:right;">Employés</th>
+                  <th>Couverture</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Map View -->
       <div id="view-map" class="view-container">
-        <div class="floating-legend" id="map-legend"></div>
+        <div class="map-controls">
+          <label><i class="ph ph-eye"></i> Angle de Vue (Taille)</label>
+          <select id="map-metric">
+            <option value="revenue_latest">Revenu ($)</option>
+            <option value="market_cap_usd">Market Cap ($)</option>
+            <option value="employees">Effectifs</option>
+          </select>
+          <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
+            La carte zoome automatiquement sur les données filtrées.
+          </div>
+        </div>
         <div id="map"></div>
       </div>
 
       <!-- Charts View -->
       <div id="view-charts" class="view-container">
-        <div class="charts-scroll">
-          <div class="charts-grid">
-            <div class="chart-card">
-              <div class="chart-header">Répartition par Type</div>
-              <div style="flex:1; position:relative;"><canvas id="chart-type"></canvas></div>
-            </div>
-            <div class="chart-card">
-              <div class="chart-header">Top Couverture Pays</div>
-              <div style="flex:1; position:relative;"><canvas id="chart-country"></canvas></div>
-            </div>
-            <div class="chart-card" style="grid-column: 1 / -1;">
-              <div class="chart-header">Analyse: CA vs Part de Marché</div>
-              <div style="flex:1; position:relative;"><canvas id="chart-scatter"></canvas></div>
-            </div>
-          </div>
+        <div class="charts-grid">
+           <div class="chart-box">
+             <h4 style="margin:0 0 1rem 0; font-weight:700;">Performance: Revenue vs Margin</h4>
+             <div style="flex:1; position:relative;"><canvas id="chart-bubble"></canvas></div>
+           </div>
+           <div class="chart-box">
+             <h4 style="margin:0 0 1rem 0; font-weight:700;">Répartition par Industrie</h4>
+             <div style="flex:1; position:relative;"><canvas id="chart-industry"></canvas></div>
+           </div>
+           <div class="chart-box" style="grid-column: 1/-1;">
+             <h4 style="margin:0 0 1rem 0; font-weight:700;">Top 15: Capitalisation Boursière ($)</h4>
+             <div style="flex:1; position:relative;"><canvas id="chart-bar"></canvas></div>
+           </div>
         </div>
       </div>
 
       <!-- Network View -->
       <div id="view-network" class="view-container">
-        <div id="network-container">
-          <div class="floating-legend">
-            <div style="font-weight:700; margin-bottom:8px;">Filtres Liens</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;">
-               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="competes_with"> Competition</label>
-               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="supplies_to"> Supply</label>
-               <label class="badge Other" style="cursor:pointer;"><input type="checkbox" checked value="partner_of"> Partner</label>
-            </div>
-            <div style="margin-top:8px; font-size:0.75rem; color:var(--text-tertiary);">Double-cliquez pour zoomer</div>
-          </div>
-        </div>
+         <div id="network-container" style="width:100%; height:100%; background:#f9fafb;"></div>
       </div>
     </main>
 
-    <!-- Detail Panel (Right Side / Bottom Sheet) -->
+    <!-- Details Panel -->
     <aside class="details-panel" id="details-panel">
-      <div class="close-panel-btn" id="close-details"><i class="ph ph-x"></i></div>
+      <div class="filters-header" style="background:#fff;">
+        Analyse Stratégique
+        <button class="btn btn-icon" id="close-details"><i class="ph ph-x"></i></button>
+      </div>
       
-      <div id="panel-empty" class="empty-state">
-        <div class="empty-icon"><i class="ph ph-cursor-click"></i></div>
-        <p style="font-weight:600; color:var(--text-main);">Aucun acteur sélectionné</p>
-        <p style="font-size:0.9rem;">Sélectionnez une ligne ou un point sur la carte pour voir l'analyse détaillée.</p>
+      <div id="panel-empty" style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-secondary);">
+         <div style="width:80px; height:80px; background:#f1f5f9; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
+             <i class="ph ph-chart-polar" style="font-size:2.5rem; color:#94a3b8;"></i>
+         </div>
+         <p style="font-weight:600;">Sélectionnez une entreprise</p>
+         <p style="font-size:0.85rem;">Cliquez sur la carte ou le tableau</p>
       </div>
 
-      <div id="panel-content" style="display:none; height:100%; flex-direction:column;">
-        <div class="panel-header">
-          <div class="entity-hero">
-            <div class="entity-avatar" id="detail-avatar"></div>
-            <div class="entity-info">
-               <h2 id="detail-name">Nom</h2>
-               <div><span class="badge" id="detail-type">Type</span></div>
+      <div id="panel-content" style="display:none; overflow-y:auto; flex:1; padding:1.5rem;">
+         <!-- Header Detail -->
+         <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.5rem;">
+            <div id="detail-logo-container"></div> 
+            <div>
+               <h2 id="detail-company" style="margin:0 0 4px 0; font-size:1.4rem; letter-spacing:-0.02em;"></h2>
+               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                 <span id="detail-ind" class="badge"></span>
+                 <span style="font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;"><i class="ph ph-globe"></i> <span id="detail-cov"></span></span>
+               </div>
             </div>
-          </div>
-          <div style="margin-top:12px; font-size:0.9rem; color:var(--text-secondary); display:flex; gap:6px; align-items:center;">
-            <i class="ph ph-map-pin"></i> <span id="detail-hq"></span>
-          </div>
-        </div>
+         </div>
+         
+         <!-- Description -->
+         <div style="margin-bottom:1.5rem; background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid var(--border);">
+            <div style="font-weight:700; font-size:0.75rem; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.05em;">OFFRE PRINCIPALE</div>
+            <div id="detail-offer" style="line-height:1.5; color:var(--text-main); font-size:0.95rem;"></div>
+         </div>
 
-        <div class="panel-content">
-           <div class="assistant-box">
-             <div class="assistant-title"><i class="ph ph-magic-wand"></i> AI Insight (Demo)</div>
-             <div class="assistant-content" id="assistant-text"></div>
-           </div>
+         <!-- Top 10 KPIs Matrix -->
+         <h5 style="margin:0 0 0.8rem 0; font-size:0.8rem; text-transform:uppercase; color:var(--text-secondary); font-weight:700;">10 KPI Stratégiques</h5>
+         <div class="kpi-grid">
+            <div class="kpi-card">
+               <div class="kpi-label">Revenue Latest</div>
+               <div class="kpi-value" id="kpi-revenue"></div>
+               <div class="kpi-sub">Total USD</div>
+            </div>
+            <div class="kpi-card">
+               <div class="kpi-label">YoY Growth</div>
+               <div class="kpi-value" id="kpi-growth"></div>
+               <div class="kpi-sub">Variation %</div>
+            </div>
+            <div class="kpi-card">
+               <div class="kpi-label">Operating Margin</div>
+               <div class="kpi-value" id="kpi-margin"></div>
+               <div class="kpi-sub">% Revenu</div>
+            </div>
+            <div class="kpi-card">
+               <div class="kpi-label">Market Cap</div>
+               <div class="kpi-value" id="kpi-mcap" style="color:var(--accent);"></div>
+               <div class="kpi-sub">Valuation USD</div>
+            </div>
+            <div class="kpi-card">
+               <div class="kpi-label">Employees</div>
+               <div class="kpi-value" id="kpi-emp" style="color:var(--text-main);"></div>
+               <div class="kpi-sub">Effectifs</div>
+            </div>
+            <div class="kpi-card">
+               <div class="kpi-label">Coverage</div>
+               <div class="kpi-value" id="kpi-geo" style="font-size:0.9rem;"></div>
+               <div class="kpi-sub">Scope</div>
+            </div>
+            <div class="kpi-card" style="grid-column:1/-1;">
+               <div class="kpi-label">Industry</div>
+               <div class="kpi-value" id="kpi-industry" style="font-size:0.95rem;"></div>
+            </div>
+         </div>
 
-           <div class="panel-section" style="margin-top:2rem;">
-             <h5>Aperçu Financier</h5>
-             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border);">
-                   <div style="font-size:0.75rem; color:var(--text-tertiary);">CA Estimé</div>
-                   <div style="font-size:1.1rem; font-weight:700;" id="detail-rev">-</div>
-                </div>
-                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border);">
-                   <div style="font-size:0.75rem; color:var(--text-tertiary);">Part de Marché</div>
-                   <div style="font-size:1.1rem; font-weight:700;" id="detail-share">-</div>
-                </div>
-             </div>
-           </div>
-
-           <div class="panel-section">
-             <h5>Expertise & Tags</h5>
-             <div id="detail-tags" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-           </div>
-
-           <div class="panel-section">
-             <h5>Description</h5>
-             <p id="detail-desc"></p>
-             <a href="#" target="_blank" id="detail-web" class="btn btn-secondary" style="margin-top:12px; display:inline-flex; width:auto;">
-               Visiter le site <i class="ph ph-arrow-square-out" style="margin-left:4px;"></i>
-             </a>
-           </div>
-        </div>
+         <a id="detail-web" href="#" target="_blank" class="btn btn-secondary" style="width:100%; justify-content:center; margin-top:1.5rem;">
+           Voir Fiche Financière Complète <i class="ph ph-arrow-square-out" style="margin-left:6px"></i>
+         </a>
       </div>
     </aside>
   </div>
 
   <script>
-    // =========================
-    // DATASET (Same as original)
-    // =========================
-    let DATA = [
-      { id: "oem_tesla", name: "Tesla", actorType: "OEM", countryCoverage: ["US", "EU", "CN"], website: "https://www.tesla.com", description: "Pionnier de l'EV et de l'architecture logicielle intégrée.", functionalTags: ["EV", "Software", "OTA", "Battery"], financials: { revenueEstimateEUR: 82000, marketShareEstimate: 18, confidence: "High" }, geo: { hqCity: "Austin", hqCountry: "US", lat: 30.2672, lng: -97.7431 } },
-      { id: "oem_toyota", name: "Toyota", actorType: "OEM", countryCoverage: ["JP", "US", "EU"], website: "https://global.toyota", description: "Leader mondial hybride avec transition EV progressive.", functionalTags: ["OEM", "Hybrid", "Scale", "Hydrogen"], financials: { revenueEstimateEUR: 250000, marketShareEstimate: 11, confidence: "High" }, geo: { hqCity: "Toyota City", hqCountry: "JP", lat: 35.0830, lng: 137.1560 } },
-      { id: "oem_vw", name: "Volkswagen", actorType: "OEM", countryCoverage: ["DE", "EU", "CN"], website: "https://vw.com", description: "Groupe multi-marques investissant massivement dans l'électrification.", functionalTags: ["OEM", "Platform", "EV", "SDV"], financials: { revenueEstimateEUR: 280000, marketShareEstimate: 10, confidence: "Med" }, geo: { hqCity: "Wolfsburg", hqCountry: "DE", lat: 52.4227, lng: 10.7865 } },
-      { id: "tier1_bosch", name: "Bosch", actorType: "Tier1", countryCoverage: ["DE", "EU", "US"], website: "https://bosch.com", description: "Premier fournisseur mondial de technologies et services.", functionalTags: ["ADAS", "Sensors", "IoT", "Mobility"], financials: { revenueEstimateEUR: 88000, marketShareEstimate: null, confidence: "High" }, geo: { hqCity: "Gerlingen", hqCountry: "DE", lat: 48.7990, lng: 9.0640 } },
-      { id: "tier1_valeo", name: "Valeo", actorType: "Tier1", countryCoverage: ["FR", "EU", "CN"], website: "https://valeo.com", description: "Spécialiste de l'électrification haute tension et des ADAS.", functionalTags: ["Lighting", "Thermal", "ADAS", "HV"], financials: { revenueEstimateEUR: 20000, marketShareEstimate: null, confidence: "Med" }, geo: { hqCity: "Paris", hqCountry: "FR", lat: 48.8566, lng: 2.3522 } },
-      { id: "batt_catl", name: "CATL", actorType: "Battery", countryCoverage: ["CN", "EU"], website: "https://catl.com", description: "Leader mondial des batteries pour véhicules électriques.", functionalTags: ["Battery", "LFP", "Cell-to-Pack"], financials: { revenueEstimateEUR: 45000, marketShareEstimate: 34, confidence: "High" }, geo: { hqCity: "Ningde", hqCountry: "CN", lat: 26.6656, lng: 119.5480 } },
-      { id: "soft_blackberry", name: "BlackBerry QNX", actorType: "Software", countryCoverage: ["CA", "US"], website: "https://blackberry.qnx.com", description: "Système d'exploitation temps réel critique pour l'automobile.", functionalTags: ["OS", "Safety", "Embedded"], financials: { revenueEstimateEUR: 800, marketShareEstimate: null, confidence: "Low" }, geo: { hqCity: "Waterloo", hqCountry: "CA", lat: 43.4643, lng: -80.5204 } },
-      { id: "chg_ionity", name: "IONITY", actorType: "Charging", countryCoverage: ["EU"], website: "https://ionity.eu", description: "Réseau de recharge haute puissance européen.", functionalTags: ["HPC", "Infrastructure", "JV"], financials: { revenueEstimateEUR: 150, marketShareEstimate: null, confidence: "Low" }, geo: { hqCity: "Munich", hqCountry: "DE", lat: 48.1351, lng: 11.5820 } }
+    // ==========================================
+    // 1. DATA (Populated with Fictive but Realistic Coords/Values)
+    // ==========================================
+    // Values are roughly based on 2023-2024 orders of magnitude for demo purposes.
+    // Lat/Lng are approximate HQ locations.
+    const DEFAULT_DATA = [
+      // 1. TECH
+      { industry: "Technologie & numérique", company: "Apple", primary_offer: "Consumer Electronics", revenue_latest: 394e9, revenue_yoy_growth_pct: 7.8, operating_margin_pct: 25.3, market_cap_usd: 2800e9, employees: 164000, geographic_coverage: "Global", source_url: "https://apple.com", lat: 37.33, lng: -122.03 },
+      { industry: "Technologie & numérique", company: "Microsoft", primary_offer: "Software & Cloud", revenue_latest: 211e9, revenue_yoy_growth_pct: 18, operating_margin_pct: 42.0, market_cap_usd: 2400e9, employees: 221000, geographic_coverage: "Global", source_url: "https://microsoft.com", lat: 47.64, lng: -122.12 },
+      { industry: "Technologie & numérique", company: "Google (Alphabet)", primary_offer: "Search & Ads", revenue_latest: 282e9, revenue_yoy_growth_pct: 9.8, operating_margin_pct: 26.0, market_cap_usd: 1600e9, employees: 190000, geographic_coverage: "Global", source_url: null, lat: 37.42, lng: -122.08 },
+      { industry: "Technologie & numérique", company: "Amazon", primary_offer: "E-commerce & Cloud", revenue_latest: 514e9, revenue_yoy_growth_pct: 9.4, operating_margin_pct: 5.5, market_cap_usd: 1350e9, employees: 1540000, geographic_coverage: "Global", source_url: null, lat: 47.60, lng: -122.33 },
+      { industry: "Technologie & numérique", company: "Meta", primary_offer: "Social Media", revenue_latest: 116e9, revenue_yoy_growth_pct: -1.0, operating_margin_pct: 25.0, market_cap_usd: 750e9, employees: 86000, geographic_coverage: "Global", source_url: null, lat: 37.48, lng: -122.14 },
+      { industry: "Technologie & numérique", company: "Samsung", primary_offer: "Electronics", revenue_latest: 234e9, revenue_yoy_growth_pct: 4.5, operating_margin_pct: 14.0, market_cap_usd: 350e9, employees: 270000, geographic_coverage: "Global", source_url: null, lat: 37.26, lng: 127.02 },
+      { industry: "Technologie & numérique", company: "IBM", primary_offer: "IT Services", revenue_latest: 60e9, revenue_yoy_growth_pct: 5.0, operating_margin_pct: 12.0, market_cap_usd: 125e9, employees: 280000, geographic_coverage: "Global", source_url: null, lat: 41.11, lng: -73.71 },
+      { industry: "Technologie & numérique", company: "Intel", primary_offer: "Semiconductors", revenue_latest: 54e9, revenue_yoy_growth_pct: -20, operating_margin_pct: 8.0, market_cap_usd: 150e9, employees: 130000, geographic_coverage: "Global", source_url: null, lat: 37.38, lng: -121.96 },
+      { industry: "Technologie & numérique", company: "Oracle", primary_offer: "Database Software", revenue_latest: 50e9, revenue_yoy_growth_pct: 18, operating_margin_pct: 28.0, market_cap_usd: 300e9, employees: 164000, geographic_coverage: "Global", source_url: null, lat: 30.26, lng: -97.74 },
+      { industry: "Technologie & numérique", company: "Sony", primary_offer: "Entertainment & Tech", revenue_latest: 85e9, revenue_yoy_growth_pct: 10, operating_margin_pct: 11.0, market_cap_usd: 110e9, employees: 110000, geographic_coverage: "Global", source_url: null, lat: 35.62, lng: 139.75 },
+
+      // 2. AUTO
+      { industry: "Automobile & mobilité", company: "Toyota", primary_offer: "Vehicles", revenue_latest: 275e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 8.0, market_cap_usd: 220e9, employees: 370000, geographic_coverage: "Global", source_url: null, lat: 35.08, lng: 137.15 },
+      { industry: "Automobile & mobilité", company: "Volkswagen", primary_offer: "Vehicles", revenue_latest: 290e9, revenue_yoy_growth_pct: 6, operating_margin_pct: 7.5, market_cap_usd: 70e9, employees: 670000, geographic_coverage: "Global", source_url: null, lat: 52.42, lng: 10.78 },
+      { industry: "Automobile & mobilité", company: "Tesla", primary_offer: "EV & Energy", revenue_latest: 81e9, revenue_yoy_growth_pct: 50, operating_margin_pct: 16.0, market_cap_usd: 800e9, employees: 127000, geographic_coverage: "Global", source_url: null, lat: 30.22, lng: -97.61 },
+      { industry: "Automobile & mobilité", company: "Mercedes-Benz", primary_offer: "Luxury Vehicles", revenue_latest: 150e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 12.0, market_cap_usd: 80e9, employees: 170000, geographic_coverage: "Global", source_url: null, lat: 48.77, lng: 9.18 },
+      { industry: "Automobile & mobilité", company: "BMW", primary_offer: "Luxury Vehicles", revenue_latest: 140e9, revenue_yoy_growth_pct: 10, operating_margin_pct: 10.0, market_cap_usd: 75e9, employees: 149000, geographic_coverage: "Global", source_url: null, lat: 48.17, lng: 11.55 },
+      { industry: "Automobile & mobilité", company: "Ford", primary_offer: "Vehicles", revenue_latest: 158e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 4.0, market_cap_usd: 50e9, employees: 173000, geographic_coverage: "Global", source_url: null, lat: 42.32, lng: -83.21 },
+      { industry: "Automobile & mobilité", company: "General Motors", primary_offer: "Vehicles", revenue_latest: 156e9, revenue_yoy_growth_pct: 23, operating_margin_pct: 6.5, market_cap_usd: 48e9, employees: 167000, geographic_coverage: "Global", source_url: null, lat: 42.33, lng: -83.04 },
+      { industry: "Automobile & mobilité", company: "Honda", primary_offer: "Vehicles & Engines", revenue_latest: 120e9, revenue_yoy_growth_pct: 4, operating_margin_pct: 5.0, market_cap_usd: 55e9, employees: 200000, geographic_coverage: "Global", source_url: null, lat: 35.66, lng: 139.72 },
+      { industry: "Automobile & mobilité", company: "Hyundai", primary_offer: "Vehicles", revenue_latest: 100e9, revenue_yoy_growth_pct: 12, operating_margin_pct: 6.0, market_cap_usd: 40e9, employees: 120000, geographic_coverage: "Global", source_url: null, lat: 37.46, lng: 127.03 },
+      { industry: "Automobile & mobilité", company: "Stellantis", primary_offer: "Vehicles", revenue_latest: 180e9, revenue_yoy_growth_pct: 7, operating_margin_pct: 11.0, market_cap_usd: 60e9, employees: 280000, geographic_coverage: "Global", source_url: null, lat: 52.30, lng: 4.69 },
+
+      // 3. ENERGIE
+      { industry: "Énergie", company: "Saudi Aramco", primary_offer: "Oil & Gas", revenue_latest: 535e9, revenue_yoy_growth_pct: 40, operating_margin_pct: 45.0, market_cap_usd: 2100e9, employees: 70000, geographic_coverage: "Global", source_url: null, lat: 26.30, lng: 50.14 },
+      { industry: "Énergie", company: "Shell", primary_offer: "Oil & Gas", revenue_latest: 381e9, revenue_yoy_growth_pct: 35, operating_margin_pct: 12.0, market_cap_usd: 200e9, employees: 82000, geographic_coverage: "Global", source_url: null, lat: 51.50, lng: -0.11 },
+      { industry: "Énergie", company: "ExxonMobil", primary_offer: "Oil & Gas", revenue_latest: 413e9, revenue_yoy_growth_pct: 44, operating_margin_pct: 14.0, market_cap_usd: 450e9, employees: 62000, geographic_coverage: "Global", source_url: null, lat: 29.83, lng: -95.45 },
+      { industry: "Énergie", company: "BP", primary_offer: "Oil & Gas", revenue_latest: 241e9, revenue_yoy_growth_pct: 30, operating_margin_pct: 10.0, market_cap_usd: 110e9, employees: 65000, geographic_coverage: "Global", source_url: null, lat: 51.51, lng: -0.13 },
+      { industry: "Énergie", company: "TotalEnergies", primary_offer: "Energy", revenue_latest: 263e9, revenue_yoy_growth_pct: 33, operating_margin_pct: 13.0, market_cap_usd: 160e9, employees: 100000, geographic_coverage: "Global", source_url: null, lat: 48.89, lng: 2.24 },
+      { industry: "Énergie", company: "Chevron", primary_offer: "Oil & Gas", revenue_latest: 246e9, revenue_yoy_growth_pct: 40, operating_margin_pct: 15.0, market_cap_usd: 300e9, employees: 43000, geographic_coverage: "Global", source_url: null, lat: 37.77, lng: -121.96 },
+      { industry: "Énergie", company: "Enel", primary_offer: "Electricity", revenue_latest: 140e9, revenue_yoy_growth_pct: 63, operating_margin_pct: 8.0, market_cap_usd: 65e9, employees: 66000, geographic_coverage: "Regional", source_url: null, lat: 41.91, lng: 12.50 },
+      { industry: "Énergie", company: "Iberdrola", primary_offer: "Utilities", revenue_latest: 53e9, revenue_yoy_growth_pct: 20, operating_margin_pct: 18.0, market_cap_usd: 80e9, employees: 40000, geographic_coverage: "Regional", source_url: null, lat: 43.26, lng: -2.93 },
+      { industry: "Énergie", company: "Engie", primary_offer: "Utilities", revenue_latest: 93e9, revenue_yoy_growth_pct: 35, operating_margin_pct: 9.0, market_cap_usd: 40e9, employees: 100000, geographic_coverage: "Global", source_url: null, lat: 48.89, lng: 2.25 },
+      { industry: "Énergie", company: "NextEra Energy", primary_offer: "Renewables", revenue_latest: 20e9, revenue_yoy_growth_pct: 12, operating_margin_pct: 25.0, market_cap_usd: 150e9, employees: 15000, geographic_coverage: "Regional", source_url: null, lat: 26.83, lng: -80.12 },
+
+      // 4. RETAIL
+      { industry: "Grande distribution & e-commerce", company: "Walmart", primary_offer: "Retail", revenue_latest: 611e9, revenue_yoy_growth_pct: 6.7, operating_margin_pct: 3.3, market_cap_usd: 420e9, employees: 2300000, geographic_coverage: "Global", source_url: null, lat: 36.37, lng: -94.20 },
+      { industry: "Grande distribution & e-commerce", company: "Costco", primary_offer: "Wholesale", revenue_latest: 226e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 3.4, market_cap_usd: 250e9, employees: 300000, geographic_coverage: "Global", source_url: null, lat: 47.54, lng: -122.06 },
+      { industry: "Grande distribution & e-commerce", company: "Carrefour", primary_offer: "Retail", revenue_latest: 83e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 2.8, market_cap_usd: 12e9, employees: 320000, geographic_coverage: "Global", source_url: null, lat: 48.70, lng: 2.29 },
+      { industry: "Grande distribution & e-commerce", company: "Aldi", primary_offer: "Discount Retail", revenue_latest: 120e9, revenue_yoy_growth_pct: 9, operating_margin_pct: 4.0, market_cap_usd: null, employees: 150000, geographic_coverage: "Global", source_url: null, lat: 51.45, lng: 7.01 },
+      { industry: "Grande distribution & e-commerce", company: "Lidl", primary_offer: "Discount Retail", revenue_latest: 110e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 4.5, market_cap_usd: null, employees: 310000, geographic_coverage: "Global", source_url: null, lat: 49.20, lng: 9.22 },
+      { industry: "Grande distribution & e-commerce", company: "Tesco", primary_offer: "Retail", revenue_latest: 80e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 3.0, market_cap_usd: 25e9, employees: 345000, geographic_coverage: "Regional", source_url: null, lat: 51.80, lng: -0.20 },
+      { industry: "Grande distribution & e-commerce", company: "Target", primary_offer: "Retail", revenue_latest: 109e9, revenue_yoy_growth_pct: 3, operating_margin_pct: 6.0, market_cap_usd: 60e9, employees: 440000, geographic_coverage: "Local", source_url: null, lat: 44.97, lng: -93.26 },
+      { industry: "Grande distribution & e-commerce", company: "Alibaba", primary_offer: "E-commerce", revenue_latest: 134e9, revenue_yoy_growth_pct: 2, operating_margin_pct: 15.0, market_cap_usd: 230e9, employees: 240000, geographic_coverage: "Global", source_url: null, lat: 30.27, lng: 120.15 },
+      { industry: "Grande distribution & e-commerce", company: "JD.com", primary_offer: "E-commerce", revenue_latest: 151e9, revenue_yoy_growth_pct: 10, operating_margin_pct: 2.5, market_cap_usd: 55e9, employees: 390000, geographic_coverage: "Regional", source_url: null, lat: 39.90, lng: 116.40 },
+
+      // 5. LUXE
+      { industry: "Luxe & mode", company: "LVMH", primary_offer: "Luxury Goods", revenue_latest: 86e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 26.0, market_cap_usd: 400e9, employees: 196000, geographic_coverage: "Global", source_url: null, lat: 48.86, lng: 2.30 },
+      { industry: "Luxe & mode", company: "Kering", primary_offer: "Luxury Fashion", revenue_latest: 20e9, revenue_yoy_growth_pct: 10, operating_margin_pct: 24.0, market_cap_usd: 60e9, employees: 42000, geographic_coverage: "Global", source_url: null, lat: 48.85, lng: 2.32 },
+      { industry: "Luxe & mode", company: "Hermès", primary_offer: "Luxury Goods", revenue_latest: 12e9, revenue_yoy_growth_pct: 23, operating_margin_pct: 40.0, market_cap_usd: 200e9, employees: 17000, geographic_coverage: "Global", source_url: null, lat: 48.87, lng: 2.31 },
+      { industry: "Luxe & mode", company: "Chanel", primary_offer: "Fashion", revenue_latest: 17e9, revenue_yoy_growth_pct: 17, operating_margin_pct: 30.0, market_cap_usd: null, employees: 28000, geographic_coverage: "Global", source_url: null, lat: 51.51, lng: -0.14 },
+      { industry: "Luxe & mode", company: "Rolex", primary_offer: "Watches", revenue_latest: 9e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 35.0, market_cap_usd: null, employees: 14000, geographic_coverage: "Global", source_url: null, lat: 46.19, lng: 6.13 },
+      { industry: "Luxe & mode", company: "Gucci", primary_offer: "Fashion", revenue_latest: 11e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 32.0, market_cap_usd: null, employees: 20000, geographic_coverage: "Global", source_url: null, lat: 43.77, lng: 11.25 },
+      { industry: "Luxe & mode", company: "Louis Vuitton", primary_offer: "Fashion", revenue_latest: 22e9, revenue_yoy_growth_pct: 12, operating_margin_pct: 38.0, market_cap_usd: null, employees: 25000, geographic_coverage: "Global", source_url: null, lat: 48.86, lng: 2.30 },
+      { industry: "Luxe & mode", company: "Prada", primary_offer: "Fashion", revenue_latest: 4e9, revenue_yoy_growth_pct: 20, operating_margin_pct: 18.0, market_cap_usd: 15e9, employees: 13000, geographic_coverage: "Global", source_url: null, lat: 45.46, lng: 9.19 },
+      { industry: "Luxe & mode", company: "Dior", primary_offer: "Fashion", revenue_latest: 8e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 28.0, market_cap_usd: null, employees: 10000, geographic_coverage: "Global", source_url: null, lat: 48.86, lng: 2.30 },
+      { industry: "Luxe & mode", company: "Burberry", primary_offer: "Fashion", revenue_latest: 3e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 16.0, market_cap_usd: 8e9, employees: 9000, geographic_coverage: "Global", source_url: null, lat: 51.49, lng: -0.12 },
+
+      // 6. AGRO
+      { industry: "Agroalimentaire & boissons", company: "Nestlé", primary_offer: "Food & Drink", revenue_latest: 95e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 17.0, market_cap_usd: 300e9, employees: 275000, geographic_coverage: "Global", source_url: null, lat: 46.46, lng: 6.84 },
+      { industry: "Agroalimentaire & boissons", company: "PepsiCo", primary_offer: "Beverages", revenue_latest: 86e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 14.0, market_cap_usd: 230e9, employees: 315000, geographic_coverage: "Global", source_url: null, lat: 41.03, lng: -73.69 },
+      { industry: "Agroalimentaire & boissons", company: "Coca-Cola", primary_offer: "Beverages", revenue_latest: 43e9, revenue_yoy_growth_pct: 11, operating_margin_pct: 28.0, market_cap_usd: 250e9, employees: 82000, geographic_coverage: "Global", source_url: null, lat: 33.74, lng: -84.38 },
+      { industry: "Agroalimentaire & boissons", company: "Danone", primary_offer: "Food", revenue_latest: 27e9, revenue_yoy_growth_pct: 7, operating_margin_pct: 12.0, market_cap_usd: 40e9, employees: 100000, geographic_coverage: "Global", source_url: null, lat: 48.87, lng: 2.33 },
+      { industry: "Agroalimentaire & boissons", company: "Unilever", primary_offer: "Consumer Goods", revenue_latest: 60e9, revenue_yoy_growth_pct: 9, operating_margin_pct: 16.0, market_cap_usd: 120e9, employees: 127000, geographic_coverage: "Global", source_url: null, lat: 51.51, lng: -0.10 },
+      { industry: "Agroalimentaire & boissons", company: "Mondelez", primary_offer: "Snacks", revenue_latest: 31e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 15.0, market_cap_usd: 95e9, employees: 80000, geographic_coverage: "Global", source_url: null, lat: 41.88, lng: -87.65 },
+      { industry: "Agroalimentaire & boissons", company: "Mars", primary_offer: "Food & Petcare", revenue_latest: 45e9, revenue_yoy_growth_pct: 6, operating_margin_pct: 10.0, market_cap_usd: null, employees: 140000, geographic_coverage: "Global", source_url: null, lat: 38.92, lng: -77.23 },
+      { industry: "Agroalimentaire & boissons", company: "Heineken", primary_offer: "Beer", revenue_latest: 35e9, revenue_yoy_growth_pct: 19, operating_margin_pct: 15.0, market_cap_usd: 55e9, employees: 85000, geographic_coverage: "Global", source_url: null, lat: 52.36, lng: 4.89 },
+      { industry: "Agroalimentaire & boissons", company: "AB InBev", primary_offer: "Beer", revenue_latest: 57e9, revenue_yoy_growth_pct: 11, operating_margin_pct: 25.0, market_cap_usd: 110e9, employees: 169000, geographic_coverage: "Global", source_url: null, lat: 50.87, lng: 4.70 },
+      { industry: "Agroalimentaire & boissons", company: "Kellogg’s", primary_offer: "Cereals", revenue_latest: 15e9, revenue_yoy_growth_pct: 4, operating_margin_pct: 13.0, market_cap_usd: 22e9, employees: 30000, geographic_coverage: "Global", source_url: null, lat: 42.31, lng: -85.18 },
+
+      // 7. HEALTH
+      { industry: "Santé & pharmaceutique", company: "Pfizer", primary_offer: "Pharma", revenue_latest: 100e9, revenue_yoy_growth_pct: 23, operating_margin_pct: 35.0, market_cap_usd: 200e9, employees: 83000, geographic_coverage: "Global", source_url: null, lat: 40.75, lng: -73.97 },
+      { industry: "Santé & pharmaceutique", company: "Roche", primary_offer: "Pharma", revenue_latest: 68e9, revenue_yoy_growth_pct: 1, operating_margin_pct: 28.0, market_cap_usd: 230e9, employees: 100000, geographic_coverage: "Global", source_url: null, lat: 47.55, lng: 7.59 },
+      { industry: "Santé & pharmaceutique", company: "Novartis", primary_offer: "Pharma", revenue_latest: 50e9, revenue_yoy_growth_pct: 4, operating_margin_pct: 24.0, market_cap_usd: 200e9, employees: 105000, geographic_coverage: "Global", source_url: null, lat: 47.56, lng: 7.58 },
+      { industry: "Santé & pharmaceutique", company: "Johnson & Johnson", primary_offer: "Healthcare", revenue_latest: 95e9, revenue_yoy_growth_pct: 1, operating_margin_pct: 25.0, market_cap_usd: 400e9, employees: 152000, geographic_coverage: "Global", source_url: null, lat: 40.49, lng: -74.44 },
+      { industry: "Santé & pharmaceutique", company: "Sanofi", primary_offer: "Pharma", revenue_latest: 43e9, revenue_yoy_growth_pct: 7, operating_margin_pct: 22.0, market_cap_usd: 130e9, employees: 95000, geographic_coverage: "Global", source_url: null, lat: 48.87, lng: 2.31 },
+      { industry: "Santé & pharmaceutique", company: "AstraZeneca", primary_offer: "Pharma", revenue_latest: 44e9, revenue_yoy_growth_pct: 18, operating_margin_pct: 20.0, market_cap_usd: 200e9, employees: 83000, geographic_coverage: "Global", source_url: null, lat: 52.20, lng: 0.12 },
+      { industry: "Santé & pharmaceutique", company: "Merck", primary_offer: "Pharma", revenue_latest: 59e9, revenue_yoy_growth_pct: 22, operating_margin_pct: 30.0, market_cap_usd: 280e9, employees: 68000, geographic_coverage: "Global", source_url: null, lat: 40.68, lng: -74.26 },
+      { industry: "Santé & pharmaceutique", company: "GSK", primary_offer: "Pharma", revenue_latest: 36e9, revenue_yoy_growth_pct: 13, operating_margin_pct: 26.0, market_cap_usd: 75e9, employees: 90000, geographic_coverage: "Global", source_url: null, lat: 51.48, lng: -0.30 },
+      { industry: "Santé & pharmaceutique", company: "Bayer", primary_offer: "Pharma & Life", revenue_latest: 50e9, revenue_yoy_growth_pct: 8, operating_margin_pct: 10.0, market_cap_usd: 50e9, employees: 100000, geographic_coverage: "Global", source_url: null, lat: 51.01, lng: 6.98 },
+      { industry: "Santé & pharmaceutique", company: "AbbVie", primary_offer: "Pharma", revenue_latest: 58e9, revenue_yoy_growth_pct: 3, operating_margin_pct: 35.0, market_cap_usd: 250e9, employees: 50000, geographic_coverage: "Global", source_url: null, lat: 42.27, lng: -87.89 },
+
+      // 8. FINANCE
+      { industry: "Finance, banque & assurance", company: "JPMorgan Chase", primary_offer: "Banking", revenue_latest: 150e9, revenue_yoy_growth_pct: 20, operating_margin_pct: 35.0, market_cap_usd: 400e9, employees: 290000, geographic_coverage: "Global", source_url: null, lat: 40.75, lng: -73.97 },
+      { industry: "Finance, banque & assurance", company: "Bank of America", primary_offer: "Banking", revenue_latest: 95e9, revenue_yoy_growth_pct: 7, operating_margin_pct: 30.0, market_cap_usd: 230e9, employees: 215000, geographic_coverage: "Global", source_url: null, lat: 35.22, lng: -80.84 },
+      { industry: "Finance, banque & assurance", company: "HSBC", primary_offer: "Banking", revenue_latest: 55e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 25.0, market_cap_usd: 160e9, employees: 220000, geographic_coverage: "Global", source_url: null, lat: 51.50, lng: -0.12 },
+      { industry: "Finance, banque & assurance", company: "BNP Paribas", primary_offer: "Banking", revenue_latest: 50e9, revenue_yoy_growth_pct: 9, operating_margin_pct: 28.0, market_cap_usd: 70e9, employees: 190000, geographic_coverage: "Global", source_url: null, lat: 48.87, lng: 2.33 },
+      { industry: "Finance, banque & assurance", company: "Crédit Agricole", primary_offer: "Banking", revenue_latest: 38e9, revenue_yoy_growth_pct: 4, operating_margin_pct: 22.0, market_cap_usd: 35e9, employees: 145000, geographic_coverage: "Global", source_url: null, lat: 48.90, lng: 2.31 },
+      { industry: "Finance, banque & assurance", company: "Goldman Sachs", primary_offer: "Investment Banking", revenue_latest: 47e9, revenue_yoy_growth_pct: -10, operating_margin_pct: 25.0, market_cap_usd: 110e9, employees: 48000, geographic_coverage: "Global", source_url: null, lat: 40.71, lng: -74.01 },
+      { industry: "Finance, banque & assurance", company: "Morgan Stanley", primary_offer: "Investment Banking", revenue_latest: 53e9, revenue_yoy_growth_pct: -5, operating_margin_pct: 24.0, market_cap_usd: 140e9, employees: 80000, geographic_coverage: "Global", source_url: null, lat: 40.75, lng: -73.98 },
+      { industry: "Finance, banque & assurance", company: "AXA", primary_offer: "Insurance", revenue_latest: 110e9, revenue_yoy_growth_pct: 2, operating_margin_pct: 8.0, market_cap_usd: 65e9, employees: 149000, geographic_coverage: "Global", source_url: null, lat: 48.87, lng: 2.29 },
+      { industry: "Finance, banque & assurance", company: "Allianz", primary_offer: "Insurance", revenue_latest: 150e9, revenue_yoy_growth_pct: 3, operating_margin_pct: 10.0, market_cap_usd: 90e9, employees: 155000, geographic_coverage: "Global", source_url: null, lat: 48.15, lng: 11.58 },
+      { industry: "Finance, banque & assurance", company: "Visa", primary_offer: "Payments", revenue_latest: 30e9, revenue_yoy_growth_pct: 20, operating_margin_pct: 65.0, market_cap_usd: 450e9, employees: 26000, geographic_coverage: "Global", source_url: null, lat: 37.55, lng: -122.27 },
+
+      // 9. MEDIA
+      { industry: "Médias, divertissement & streaming", company: "Netflix", primary_offer: "Streaming", revenue_latest: 31e9, revenue_yoy_growth_pct: 6, operating_margin_pct: 18.0, market_cap_usd: 180e9, employees: 12800, geographic_coverage: "Global", source_url: null, lat: 37.23, lng: -121.96 },
+      { industry: "Médias, divertissement & streaming", company: "Disney", primary_offer: "Entertainment", revenue_latest: 82e9, revenue_yoy_growth_pct: 22, operating_margin_pct: 8.0, market_cap_usd: 160e9, employees: 220000, geographic_coverage: "Global", source_url: null, lat: 34.15, lng: -118.32 },
+      { industry: "Médias, divertissement & streaming", company: "Warner Bros. Discovery", primary_offer: "Entertainment", revenue_latest: 33e9, revenue_yoy_growth_pct: -5, operating_margin_pct: 5.0, market_cap_usd: 30e9, employees: 37000, geographic_coverage: "Global", source_url: null, lat: 40.75, lng: -73.99 },
+      { industry: "Médias, divertissement & streaming", company: "Universal", primary_offer: "Music & Film", revenue_latest: 10e9, revenue_yoy_growth_pct: 10, operating_margin_pct: 15.0, market_cap_usd: 45e9, employees: 10000, geographic_coverage: "Global", source_url: null, lat: 34.13, lng: -118.35 },
+      { industry: "Médias, divertissement & streaming", company: "Sony Pictures", primary_offer: "Film", revenue_latest: 10e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 8.0, market_cap_usd: null, employees: 9000, geographic_coverage: "Global", source_url: null, lat: 34.02, lng: -118.39 },
+      { industry: "Médias, divertissement & streaming", company: "Spotify", primary_offer: "Audio Streaming", revenue_latest: 12e9, revenue_yoy_growth_pct: 20, operating_margin_pct: -2.0, market_cap_usd: 30e9, employees: 9000, geographic_coverage: "Global", source_url: null, lat: 59.33, lng: 18.06 },
+      { industry: "Médias, divertissement & streaming", company: "YouTube", primary_offer: "Video Platform", revenue_latest: 29e9, revenue_yoy_growth_pct: 1, operating_margin_pct: 35.0, market_cap_usd: null, employees: 2800, geographic_coverage: "Global", source_url: null, lat: 37.62, lng: -122.42 },
+      { industry: "Médias, divertissement & streaming", company: "TikTok", primary_offer: "Social Media", revenue_latest: 15e9, revenue_yoy_growth_pct: 50, operating_margin_pct: 20.0, market_cap_usd: null, employees: 20000, geographic_coverage: "Global", source_url: null, lat: 34.01, lng: -118.39 },
+      { industry: "Médias, divertissement & streaming", company: "Canal+", primary_offer: "TV", revenue_latest: 6e9, revenue_yoy_growth_pct: 2, operating_margin_pct: 10.0, market_cap_usd: null, employees: 8000, geographic_coverage: "Regional", source_url: null, lat: 48.83, lng: 2.26 },
+      { industry: "Médias, divertissement & streaming", company: "BBC", primary_offer: "Broadcasting", revenue_latest: 5e9, revenue_yoy_growth_pct: 0, operating_margin_pct: 0.0, market_cap_usd: null, employees: 22000, geographic_coverage: "Regional", source_url: null, lat: 51.51, lng: -0.14 },
+
+      // 10. TRANSPORT
+      { industry: "Transport, logistique & aéronautique", company: "Airbus", primary_offer: "Aerospace", revenue_latest: 60e9, revenue_yoy_growth_pct: 13, operating_margin_pct: 9.0, market_cap_usd: 100e9, employees: 130000, geographic_coverage: "Global", source_url: null, lat: 43.60, lng: 1.44 },
+      { industry: "Transport, logistique & aéronautique", company: "Boeing", primary_offer: "Aerospace", revenue_latest: 66e9, revenue_yoy_growth_pct: 6, operating_margin_pct: -5.0, market_cap_usd: 130e9, employees: 156000, geographic_coverage: "Global", source_url: null, lat: 41.88, lng: -87.63 },
+      { industry: "Transport, logistique & aéronautique", company: "UPS", primary_offer: "Logistics", revenue_latest: 100e9, revenue_yoy_growth_pct: 3, operating_margin_pct: 12.0, market_cap_usd: 150e9, employees: 500000, geographic_coverage: "Global", source_url: null, lat: 33.75, lng: -84.38 },
+      { industry: "Transport, logistique & aéronautique", company: "FedEx", primary_offer: "Logistics", revenue_latest: 93e9, revenue_yoy_growth_pct: 5, operating_margin_pct: 6.0, market_cap_usd: 60e9, employees: 550000, geographic_coverage: "Global", source_url: null, lat: 35.14, lng: -90.04 },
+      { industry: "Transport, logistique & aéronautique", company: "DHL", primary_offer: "Logistics", revenue_latest: 94e9, revenue_yoy_growth_pct: 15, operating_margin_pct: 8.0, market_cap_usd: 50e9, employees: 600000, geographic_coverage: "Global", source_url: null, lat: 50.71, lng: 7.12 },
+      { industry: "Transport, logistique & aéronautique", company: "Maersk", primary_offer: "Shipping", revenue_latest: 80e9, revenue_yoy_growth_pct: 30, operating_margin_pct: 35.0, market_cap_usd: 30e9, employees: 110000, geographic_coverage: "Global", source_url: null, lat: 55.67, lng: 12.59 },
+      { industry: "Transport, logistique & aéronautique", company: "CMA CGM", primary_offer: "Shipping", revenue_latest: 70e9, revenue_yoy_growth_pct: 35, operating_margin_pct: 30.0, market_cap_usd: null, employees: 150000, geographic_coverage: "Global", source_url: null, lat: 43.31, lng: 5.36 },
+      { industry: "Transport, logistique & aéronautique", company: "Air France-KLM", primary_offer: "Airlines", revenue_latest: 26e9, revenue_yoy_growth_pct: 80, operating_margin_pct: 4.0, market_cap_usd: 5e9, employees: 75000, geographic_coverage: "Global", source_url: null, lat: 49.00, lng: 2.54 },
+      { industry: "Transport, logistique & aéronautique", company: "Lufthansa", primary_offer: "Airlines", revenue_latest: 32e9, revenue_yoy_growth_pct: 70, operating_margin_pct: 5.0, market_cap_usd: 10e9, employees: 105000, geographic_coverage: "Global", source_url: null, lat: 50.93, lng: 6.95 },
+      { industry: "Transport, logistique & aéronautique", company: "Ryanair", primary_offer: "Airlines", revenue_latest: 10e9, revenue_yoy_growth_pct: 50, operating_margin_pct: 14.0, market_cap_usd: 20e9, employees: 22000, geographic_coverage: "Regional", source_url: null, lat: 53.42, lng: -6.25 }
     ];
 
-    let RELATIONS = [
-      { source: "tier1_bosch", target: "oem_vw", type: "supplies_to", weight: 5 },
-      { source: "batt_catl", target: "oem_tesla", type: "supplies_to", weight: 4 },
-      { source: "soft_blackberry", target: "oem_vw", type: "integrates_with", weight: 3 },
-      { source: "oem_tesla", target: "oem_vw", type: "competes_with", weight: 5 },
-      { source: "chg_ionity", target: "oem_vw", type: "partner_of", weight: 5 }
-    ];
-
-    // =========================
-    // STATE & INIT
-    // =========================
     let APP = {
-      view: "table",
-      selectedId: null,
-      filters: { search: "", types: [], countries: [], revMin: 0 },
-      filteredData: [...DATA],
-      instances: { map: null, mapGroup: null, charts: [], simulation: null }
+      view: 'table',
+      filters: { search: "", industries: [], coverages: [], revMin: 0 },
+      data: [...DEFAULT_DATA],
+      instances: { map: null, charts: [] },
+      mapMetric: 'revenue_latest'
     };
 
-    const ACTOR_TYPES = [...new Set(DATA.map(d => d.actorType))].sort();
-
+    // ==========================================
+    // 2. INITIALIZATION
+    // ==========================================
     document.addEventListener("DOMContentLoaded", () => {
       initFilters();
       bindEvents();
-      applyFilters();
+      applyFilters(); 
     });
 
-    // =========================
-    // LOGIC
-    // =========================
-    function bindEvents(){
-      // View Switching
+    // ==========================================
+    // 3. LOGIC & FUNCTIONS
+    // ==========================================
+    
+    function getIndustryColor(str) {
+      if(!str) return "#ccc";
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
+      const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+      return '#' + "00000".substring(0, 6 - c.length) + c;
+    }
+
+    function initFilters() {
+      // Industries
+      const indContainer = document.getElementById("filter-industry");
+      const industries = [...new Set(APP.data.map(d => d.industry))].sort();
+      indContainer.innerHTML = "";
+      industries.forEach(ind => {
+        const div = document.createElement("div");
+        div.className = "checkbox-item";
+        div.innerHTML = `<input type="checkbox" checked value="${ind}"> <span class="badge" style="background:${getIndustryColor(ind)}">${ind}</span>`;
+        div.querySelector("input").addEventListener("change", updateFilters);
+        indContainer.appendChild(div);
+      });
+      APP.filters.industries = industries;
+
+      // Coverage
+      const cContainer = document.getElementById("filter-coverage");
+      const coverages = [...new Set(APP.data.map(d => d.geographic_coverage))].filter(Boolean).sort();
+      cContainer.innerHTML = "";
+      coverages.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        cContainer.appendChild(opt);
+      });
+    }
+
+    function bindEvents() {
       document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           APP.view = btn.dataset.view;
-          updateView();
+          switchView();
         });
       });
 
-      // Mobile Drawers
-      const filtersPanel = document.getElementById("filters-panel");
-      const detailsPanel = document.getElementById("details-panel");
-      const backdrop = document.getElementById("backdrop");
-
-      document.getElementById("toggle-filters").addEventListener("click", () => {
-        filtersPanel.classList.add("open");
-        backdrop.classList.add("open");
-      });
-
-      document.getElementById("close-filters").addEventListener("click", closeDrawers);
-      document.getElementById("close-details").addEventListener("click", closeDrawers);
-      backdrop.addEventListener("click", closeDrawers);
-
-      function closeDrawers() {
-        filtersPanel.classList.remove("open");
-        detailsPanel.classList.remove("open");
-        backdrop.classList.remove("open");
-      }
-
-      // Filters
       document.getElementById("search-input").addEventListener("input", (e) => {
         APP.filters.search = e.target.value.toLowerCase();
         applyFilters();
       });
-      document.getElementById("filter-revenue").addEventListener("input", (e) => {
-        APP.filters.revMin = parseInt(e.target.value);
-        document.getElementById("rev-display").textContent = `≥ ${APP.filters.revMin} M€`;
+      document.getElementById("filter-coverage").addEventListener("change", updateFilters);
+      
+      const range = document.getElementById("filter-revenue");
+      range.addEventListener("input", (e) => {
+        APP.filters.revMin = Number(e.target.value);
+        document.getElementById("rev-display").textContent = `$${(APP.filters.revMin/1e9).toFixed(0)}B+`;
         applyFilters();
       });
-      document.getElementById("btn-reset").addEventListener("click", () => {
-         document.getElementById("search-input").value = "";
-         document.getElementById("filter-revenue").value = 0;
-         initFilters();
-         APP.filters.search = "";
-         APP.filters.revMin = 0;
-         applyFilters();
+
+      document.getElementById("map-metric").addEventListener("change", (e) => {
+        APP.mapMetric = e.target.value;
+        renderMap();
       });
 
-      // Sort
-      document.querySelectorAll("th[data-sort]").forEach(th => {
-        th.addEventListener("click", () => {
-           // Simple sort demo
-           const field = th.dataset.sort;
-           APP.filteredData.sort((a,b) => (a[field] > b[field] ? 1 : -1));
-           renderTable();
-        });
-      });
-    }
-
-    function initFilters(){
-      const tContainer = document.getElementById("filter-type");
-      tContainer.innerHTML = "";
-      APP.filters.types = [...ACTOR_TYPES];
-      ACTOR_TYPES.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "checkbox-item";
-        div.innerHTML = `<input type="checkbox" checked value="${t}"> <span class="badge ${t}">${t}</span>`;
-        div.querySelector("input").addEventListener("change", () => updateFilterState());
-        tContainer.appendChild(div);
-      });
+      const filters = document.getElementById("filters-panel");
+      const details = document.getElementById("details-panel");
+      const back = document.getElementById("backdrop");
+      const closeAll = () => { filters.classList.remove("open"); details.classList.remove("open"); back.classList.remove("open"); };
       
-      const cSelect = document.getElementById("filter-country");
-      const countries = new Set();
-      DATA.forEach(d => d.countryCoverage.forEach(c => countries.add(c)));
-      cSelect.innerHTML = "";
-      countries.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c; opt.textContent = c;
-        cSelect.appendChild(opt);
+      document.getElementById("toggle-filters").addEventListener("click", () => { filters.classList.add("open"); back.classList.add("open"); });
+      document.getElementById("close-filters").addEventListener("click", closeAll);
+      document.getElementById("close-details").addEventListener("click", closeAll);
+      back.addEventListener("click", closeAll);
+      
+      const reset = () => {
+        document.getElementById("search-input").value = "";
+        range.value = 0; document.getElementById("rev-display").textContent = "$0B+";
+        document.querySelectorAll("#filter-industry input").forEach(i => i.checked = true);
+        document.getElementById("filter-coverage").selectedIndex = -1;
+        updateFilters();
+      };
+      document.getElementById("btn-reset").addEventListener("click", reset);
+      document.getElementById("btn-reset-mob").addEventListener("click", reset);
+      
+      document.getElementById("btn-export").addEventListener("click", exportCSV);
+      const fileInput = document.getElementById("file-input");
+      document.getElementById("btn-import").addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", handleImport);
+      
+      document.querySelectorAll("th[data-sort]").forEach(th => {
+         th.addEventListener("click", () => {
+            const k = th.dataset.sort;
+            APP.data.sort((a,b) => {
+               const va = a[k] ?? -Infinity;
+               const vb = b[k] ?? -Infinity;
+               return typeof va === 'string' ? va.localeCompare(vb) : vb - va;
+            });
+            renderTable();
+         });
       });
-      cSelect.addEventListener("change", updateFilterState);
     }
 
-    function updateFilterState(){
-      const checkedTypes = Array.from(document.querySelectorAll("#filter-type input:checked")).map(c => c.value);
-      const selectedCountries = Array.from(document.getElementById("filter-country").selectedOptions).map(o => o.value);
-      APP.filters.types = checkedTypes;
-      APP.filters.countries = selectedCountries;
+    function updateFilters() {
+      APP.filters.industries = Array.from(document.querySelectorAll("#filter-industry input:checked")).map(i => i.value);
+      APP.filters.coverages = Array.from(document.getElementById("filter-coverage").selectedOptions).map(o => o.value);
       applyFilters();
     }
 
-    function applyFilters(){
-      APP.filteredData = DATA.filter(d => {
-        if (!APP.filters.types.includes(d.actorType)) return false;
-        if (APP.filters.countries.length > 0) {
-           if (!d.countryCoverage.some(c => APP.filters.countries.includes(c))) return false;
+    function applyFilters() {
+      APP.filteredData = APP.data.filter(d => {
+        if(!APP.filters.industries.includes(d.industry)) return false;
+        if(APP.filters.coverages.length && !APP.filters.coverages.includes(d.geographic_coverage)) return false;
+        if((d.revenue_latest || 0) < APP.filters.revMin) return false;
+        
+        const term = APP.filters.search;
+        if(term) {
+           const composite = (d.company + " " + d.industry + " " + d.primary_offer).toLowerCase();
+           if(!composite.includes(term)) return false;
         }
-        if (d.financials.revenueEstimateEUR !== null && d.financials.revenueEstimateEUR < APP.filters.revMin) return false;
-        if (APP.filters.search && !d.name.toLowerCase().includes(APP.filters.search)) return false;
         return true;
       });
-      updateView();
+      
+      switchView();
     }
 
-    function updateView(){
+    function switchView() {
       document.querySelectorAll(".view-container").forEach(el => el.classList.remove("active"));
       document.getElementById(`view-${APP.view}`).classList.add("active");
       
-      if (APP.view === "table") renderTable();
-      if (APP.view === "map") renderMap();
-      if (APP.view === "charts") renderCharts();
-      if (APP.view === "network") renderNetwork();
+      if(APP.view === 'table') renderTable();
+      if(APP.view === 'map') { 
+         setTimeout(() => { if(APP.instances.map) APP.instances.map.invalidateSize(); else renderMap(); }, 100); 
+         if(APP.instances.map) renderMap(); 
+      }
+      if(APP.view === 'charts') renderCharts();
+      if(APP.view === 'network') renderNetwork();
     }
 
-    // =========================
-    // RENDERERS
-    // =========================
-    function renderTable(){
+    function exportCSV() {
+       const headers = ["industry","company","primary_offer","revenue_latest","revenue_yoy_growth_pct","operating_margin_pct","market_cap_usd","employees","geographic_coverage","source_url"];
+       let csv = headers.join(",") + "\n";
+       APP.filteredData.forEach(row => {
+          csv += headers.map(h => {
+             let val = row[h] === null ? "" : row[h];
+             if(typeof val === 'string' && val.includes(",")) val = `"${val}"`;
+             return val;
+          }).join(",") + "\n";
+       });
+       const blob = new Blob([csv], { type: 'text/csv' });
+       const url = window.URL.createObjectURL(blob);
+       const a = document.createElement('a');
+       a.href = url; a.download = 'benchmark_kpi_export.csv'; a.click();
+    }
+
+    function handleImport(e) {
+       const file = e.target.files[0];
+       if(!file) return;
+       const reader = new FileReader();
+       reader.onload = (evt) => {
+          try {
+             let loadedData = [];
+             if(file.name.endsWith('.json')) {
+                loadedData = JSON.parse(evt.target.result);
+             } else {
+                const text = evt.target.result;
+                const lines = text.split('\n').filter(l => l.trim());
+                const headers = lines[0].split(',').map(h => h.trim());
+                for(let i=1; i<lines.length; i++) {
+                   const vals = lines[i].split(',');
+                   let obj = {};
+                   headers.forEach((h, idx) => {
+                      let v = vals[idx]?.trim();
+                      if(v === "") v = null;
+                      if(['revenue_latest','market_cap_usd','employees','revenue_yoy_growth_pct','operating_margin_pct','lat','lng'].includes(h) && v !== null) {
+                         v = Number(v);
+                      }
+                      obj[h] = v;
+                   });
+                   loadedData.push(obj);
+                }
+             }
+             APP.data = loadedData;
+             initFilters();
+             applyFilters();
+             alert(`Import successful: ${loadedData.length} records.`);
+          } catch(err) {
+             alert("Error importing file: " + err.message);
+          }
+       };
+       reader.readAsText(file);
+    }
+
+    function getLogoHTML(d, size=28) {
+       let domain = "";
+       if(d.source_url) { try { domain = new URL(d.source_url).hostname; } catch(e){} }
+       const initials = d.company.substring(0,2).toUpperCase();
+       const color = getIndustryColor(d.industry);
+       const styleSize = `width:${size}px; height:${size}px;`;
+       const fontSize = size > 40 ? '1.5rem' : '0.75rem';
+       
+       return `
+        <div style="position:relative; ${styleSize} border-radius:6px; overflow:hidden; border:1px solid #e2e8f0; flex-shrink:0;">
+           <div style="position:absolute; inset:0; z-index:0; color:${color}; background:${color}15; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:${fontSize};">${initials}</div>
+           ${domain ? `<img src="https://logo.clearbit.com/${domain}?size=${size*2}" style="position:absolute; inset:0; z-index:1; width:100%; height:100%; object-fit:contain; background:#fff;" onerror="this.style.display='none'">` : ''}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 6. RENDERERS
+    // ==========================================
+    function renderTable() {
       const tbody = document.getElementById("table-body");
       tbody.innerHTML = "";
-      APP.filteredData.forEach(item => {
+      APP.filteredData.forEach(d => {
         const tr = document.createElement("tr");
-        if (APP.selectedId === item.id) tr.classList.add("selected");
-        tr.onclick = () => selectEntity(item);
+        tr.onclick = () => showDetails(d);
         
-        const tags = item.functionalTags.slice(0,3).map(t => `<span class="tag-pill">${t}</span>`).join("");
-        const rev = item.financials.revenueEstimateEUR ? (item.financials.revenueEstimateEUR/1000).toFixed(1)+" Md€" : "-";
+        const rev = d.revenue_latest ? `$${(d.revenue_latest/1e9).toFixed(1)}B` : 'N/A';
+        const margin = d.operating_margin_pct !== null ? `${d.operating_margin_pct}%` : 'N/A';
+        const mcap = d.market_cap_usd ? `$${(d.market_cap_usd/1e9).toFixed(1)}B` : 'N/A';
+        const emp = d.employees ? (d.employees/1000).toFixed(0)+'k' : 'N/A';
         
         tr.innerHTML = `
-          <td>
-            <div style="font-weight:700; color:var(--primary-dark);">${item.name}</div>
-          </td>
-          <td><span class="badge ${item.actorType}">${item.actorType}</span></td>
-          <td>${item.geo.hqCity}</td>
-          <td class="hide-mobile">${item.countryCoverage.join(", ")}</td>
-          <td class="hide-mobile">${tags}</td>
-          <td>${rev}</td>
-          <td>${item.financials.marketShareEstimate ? item.financials.marketShareEstimate+"%" : "-"}</td>
+          <td><div class="company-cell">${getLogoHTML(d)} <strong>${d.company}</strong></div></td>
+          <td><span class="badge" style="background:${getIndustryColor(d.industry)}">${d.industry}</span></td>
+          <td style="text-align:right;">${rev}</td>
+          <td style="text-align:right; color:${d.operating_margin_pct > 0 ? 'var(--success)' : (d.operating_margin_pct < 0 ? '#ef4444' : 'inherit')}">${margin}</td>
+          <td style="text-align:right; font-weight:600;">${mcap}</td>
+          <td style="text-align:right;">${emp}</td>
+          <td>${d.geographic_coverage || 'N/A'}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function renderMap(){
-      if (!APP.instances.map) {
-        APP.instances.map = L.map("map", { zoomControl: false }).setView([30, 0], 2);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(APP.instances.map);
-        APP.instances.mapGroup = L.layerGroup().addTo(APP.instances.map);
-        L.control.zoom({ position: 'bottomright' }).addTo(APP.instances.map);
+    function renderMap() {
+      const mapContainer = document.getElementById("map");
+      
+      if(!APP.instances.map) {
+         APP.instances.map = L.map('map', {zoomControl: false}).setView([20, 0], 2);
+         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 19
+         }).addTo(APP.instances.map);
+         L.control.zoom({ position: 'bottomright' }).addTo(APP.instances.map);
       }
-      setTimeout(() => APP.instances.map.invalidateSize(), 100);
       
-      APP.instances.mapGroup.clearLayers();
-      
-      // Update Legend
-      const leg = document.getElementById("map-legend");
-      leg.innerHTML = `<div style="font-weight:700; margin-bottom:6px;">Légende</div>` + 
-        ACTOR_TYPES.map(t => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="width:10px;height:10px;border-radius:50%;background:${getColor(t)}"></span><span style="font-size:0.8rem">${t}</span></div>`).join("");
+      APP.instances.map.eachLayer(l => { if(l instanceof L.CircleMarker) APP.instances.map.removeLayer(l); });
 
+      const metric = APP.mapMetric;
+      let maxVal = 0;
       APP.filteredData.forEach(d => {
-        const marker = L.circleMarker([d.geo.lat, d.geo.lng], {
-          color: getColor(d.actorType),
-          fillColor: getColor(d.actorType),
-          fillOpacity: 0.8,
-          radius: 8
-        }).addTo(APP.instances.mapGroup);
-        marker.on("click", () => selectEntity(d));
+         const v = d[metric] || 0;
+         if(v > maxVal) maxVal = v;
       });
+
+      const bounds = [];
+      APP.filteredData.forEach(d => {
+         if(d.lat && d.lng) {
+             const val = d[metric] || 0;
+             // Calculate radius relative to max value (min 4px, max 25px)
+             const radius = maxVal > 0 ? 4 + (Math.sqrt(val) / Math.sqrt(maxVal)) * 20 : 6;
+             
+             const m = L.circleMarker([d.lat, d.lng], {
+               color: getIndustryColor(d.industry), 
+               fillColor: getIndustryColor(d.industry), 
+               fillOpacity: 0.7, 
+               weight: 1,
+               radius: radius
+             }).addTo(APP.instances.map);
+             
+             // Tooltip on Hover
+             let formattedVal = val;
+             if(metric === 'revenue_latest' || metric === 'market_cap_usd') formattedVal = `$${(val/1e9).toFixed(1)}B`;
+             else if(metric === 'employees') formattedVal = `${(val/1000).toFixed(0)}k`;
+
+             m.bindTooltip(`
+                <div style="text-align:center;">
+                  <strong>${d.company}</strong><br>
+                  <span style="font-size:0.8rem">${d.industry}</span><br>
+                  <span style="font-weight:700; color:${getIndustryColor(d.industry)}">${formattedVal}</span>
+                </div>
+             `, { direction: 'top', offset: [0, -5] });
+
+             m.on("click", () => showDetails(d));
+             bounds.push([d.lat, d.lng]);
+         }
+      });
+      
+      // Auto-Zoom logic
+      if(bounds.length > 0) {
+         APP.instances.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6 });
+      }
     }
 
-    function renderCharts(){
+    function renderCharts() {
       APP.instances.charts.forEach(c => c.destroy());
       APP.instances.charts = [];
-      
-      // Type Chart
-      const typeCtx = document.getElementById("chart-type").getContext("2d");
-      const typeData = {};
-      APP.filteredData.forEach(d => typeData[d.actorType] = (typeData[d.actorType] || 0) + 1);
-      
-      APP.instances.charts.push(new Chart(typeCtx, {
+
+      // 1. Bubble
+      const ctx1 = document.getElementById("chart-bubble").getContext("2d");
+      const bubbleData = APP.filteredData
+        .filter(d => d.revenue_latest && d.operating_margin_pct !== null)
+        .map(d => ({ 
+           x: d.revenue_latest, 
+           y: d.operating_margin_pct, 
+           r: d.market_cap_usd ? Math.sqrt(d.market_cap_usd)/20000 : 5, 
+           label: d.company, 
+           industry: d.industry 
+        }));
+        
+      APP.instances.charts.push(new Chart(ctx1, {
+         type: 'bubble',
+         data: { datasets: [{ label: 'Performance', data: bubbleData, backgroundColor: bubbleData.map(b => getIndustryColor(b.industry)) }] },
+         options: { 
+            responsive: true, maintainAspectRatio: false,
+            plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.label}: Rev $${(ctx.raw.x/1e9).toFixed(0)}B / Marge ${ctx.raw.y}%` } } },
+            scales: { x: {title:{display:true, text:'Revenu ($)'}}, y: {title:{display:true, text:'Marge Opérationnelle (%)'}} }
+         }
+      }));
+
+      // 2. Pie
+      const ctx2 = document.getElementById("chart-industry").getContext("2d");
+      const indCounts = {}; 
+      APP.filteredData.forEach(d => indCounts[d.industry] = (indCounts[d.industry]||0)+1);
+      APP.instances.charts.push(new Chart(ctx2, {
         type: 'doughnut',
-        data: {
-           labels: Object.keys(typeData),
-           datasets: [{ data: Object.values(typeData), backgroundColor: Object.keys(typeData).map(getColor) }]
-        },
+        data: { labels: Object.keys(indCounts), datasets: [{ data: Object.values(indCounts), backgroundColor: Object.keys(indCounts).map(k=>getIndustryColor(k)) }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
       }));
 
-      // Country Chart
-      const ctryCtx = document.getElementById("chart-country").getContext("2d");
-      const ctryData = {};
-      APP.filteredData.forEach(d => d.countryCoverage.forEach(c => ctryData[c] = (ctryData[c] || 0) + 1));
-      const sortedC = Object.entries(ctryData).sort((a,b)=>b[1]-a[1]).slice(0,8);
-      
-      APP.instances.charts.push(new Chart(ctryCtx, {
+      // 3. Bar
+      const ctx3 = document.getElementById("chart-bar").getContext("2d");
+      const sortedByCap = APP.filteredData.filter(d => d.market_cap_usd).sort((a,b) => b.market_cap_usd - a.market_cap_usd).slice(0,15);
+      APP.instances.charts.push(new Chart(ctx3, {
         type: 'bar',
-        data: {
-           labels: sortedC.map(x=>x[0]),
-           datasets: [{ label: 'Présence', data: sortedC.map(x=>x[1]), backgroundColor: '#3b82f6', borderRadius:4 }]
+        data: { 
+          labels: sortedByCap.map(d => d.company),
+          datasets: [{ label: 'Market Cap ($)', data: sortedByCap.map(d => d.market_cap_usd), backgroundColor: sortedByCap.map(d=>getIndustryColor(d.industry)) }]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-      }));
-
-      // Scatter
-      const scCtx = document.getElementById("chart-scatter").getContext("2d");
-      const scData = APP.filteredData.map(d => ({
-        x: d.financials.revenueEstimateEUR || 0,
-        y: d.financials.marketShareEstimate || 0,
-        r: 6,
-        label: d.name
-      })).filter(d => d.x > 0);
-      
-      APP.instances.charts.push(new Chart(scCtx, {
-        type: 'bubble',
-        data: { datasets: [{ label: 'Acteurs', data: scData, backgroundColor: '#6366f1' }] },
-        options: { 
-          responsive: true, maintainAspectRatio: false,
-          plugins: { tooltip: { callbacks: { label: (ctx) => ctx.raw.label } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
       }));
     }
 
-    function renderNetwork(){
+    function renderNetwork() {
        const container = document.getElementById("network-container");
-       d3.select(container).selectAll("svg").remove();
-       
-       const width = container.clientWidth;
-       const height = container.clientHeight;
-       
-       const nodes = APP.filteredData.map(d => ({ id: d.id, group: d.actorType, name: d.name }));
-       const nodeIds = new Set(nodes.map(n => n.id));
-       const links = RELATIONS.filter(r => nodeIds.has(r.source) && nodeIds.has(r.target)).map(d => ({...d}));
-       
-       const svg = d3.select(container).append("svg").attr("width",width).attr("height",height);
-       
-       const simulation = d3.forceSimulation(nodes)
-         .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-         .force("charge", d3.forceManyBody().strength(-200))
-         .force("center", d3.forceCenter(width/2, height/2));
-         
-       const link = svg.append("g").selectAll("line").data(links).enter().append("line")
-         .attr("stroke", "#cbd5e1").attr("stroke-width", 2);
-         
+       container.innerHTML = "";
+       const w = container.clientWidth, h = container.clientHeight;
+       const nodes = APP.filteredData.map((d,i) => ({id: i, ...d}));
+       let links = [];
+       for(let i=0; i<nodes.length; i++){
+          for(let j=i+1; j<nodes.length; j++){
+             if(nodes[i].industry === nodes[j].industry) {
+                links.push({source: i, target: j});
+             }
+          }
+       }
+
+       const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+       const sim = d3.forceSimulation(nodes)
+         .force("link", d3.forceLink(links).id(d=>d.id).distance(80))
+         .force("charge", d3.forceManyBody().strength(-150))
+         .force("center", d3.forceCenter(w/2, h/2));
+
+       const link = svg.append("g").selectAll("line").data(links).enter().append("line").attr("stroke", "#e2e8f0").attr("stroke-width", 1);
        const node = svg.append("g").selectAll("circle").data(nodes).enter().append("circle")
-         .attr("r", 10).attr("fill", d => getColor(d.group)).attr("stroke", "#fff").attr("stroke-width", 2)
-         .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended));
-       
-       node.on("click", (e, d) => selectEntity(APP.filteredData.find(x => x.id === d.id)));
-       
-       simulation.on("tick", () => {
-         link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-         node.attr("cx", d => d.x).attr("cy", d => d.y);
+         .attr("r", 6).attr("fill", d => getIndustryColor(d.industry)).attr("stroke", "#fff")
+         .call(d3.drag().on("start", (e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y})
+         .on("drag", (e,d)=>{d.fx=e.x;d.fy=e.y})
+         .on("end", (e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
+         
+       node.append("title").text(d => d.company);
+       node.on("click", (e,d) => showDetails(d));
+       sim.on("tick", () => {
+         link.attr("x1", d=>d.source.x).attr("y1", d=>d.source.y).attr("x2", d=>d.target.x).attr("y2", d=>d.target.y);
+         node.attr("cx", d=>d.x).attr("cy", d=>d.y);
        });
+    }
+
+    // ==========================================
+    // 7. INTERACTIONS
+    // ==========================================
+    function showDetails(d) {
+       document.getElementById("panel-empty").style.display = "none";
+       document.getElementById("panel-content").style.display = "block";
        
-       function dragstarted(event) { if (!event.active) simulation.alphaTarget(0.3).restart(); event.subject.fx = event.subject.x; event.subject.fy = event.subject.y; }
-       function dragged(event) { event.subject.fx = event.x; event.subject.fy = event.y; }
-       function dragended(event) { if (!event.active) simulation.alphaTarget(0); event.subject.fx = null; event.subject.fy = null; }
+       document.getElementById("detail-logo-container").innerHTML = getLogoHTML(d, 64);
+       document.getElementById("detail-company").textContent = d.company;
+       document.getElementById("detail-ind").textContent = d.industry;
+       document.getElementById("detail-ind").style.background = getIndustryColor(d.industry);
+       document.getElementById("detail-cov").textContent = d.geographic_coverage || 'N/A';
+       document.getElementById("detail-offer").textContent = d.primary_offer;
+       
+       const btnWeb = document.getElementById("detail-web");
+       if(d.source_url) {
+           btnWeb.href = d.source_url;
+           btnWeb.classList.remove('disabled');
+           btnWeb.style.opacity = "1";
+       } else {
+           btnWeb.href = "#";
+           btnWeb.style.opacity = "0.5";
+           btnWeb.onclick = (e) => e.preventDefault();
+       }
+
+       const fmtMoney = (v) => v ? `$${(v/1e9).toFixed(1)}B` : 'N/A';
+       const fmtPct = (v) => v !== null ? `${v}%` : 'N/A';
+       
+       document.getElementById("kpi-revenue").textContent = fmtMoney(d.revenue_latest);
+       document.getElementById("kpi-growth").textContent = fmtPct(d.revenue_yoy_growth_pct);
+       document.getElementById("kpi-margin").textContent = fmtPct(d.operating_margin_pct);
+       document.getElementById("kpi-mcap").textContent = fmtMoney(d.market_cap_usd);
+       document.getElementById("kpi-emp").textContent = d.employees ? (d.employees/1000).toFixed(0)+'k' : 'N/A';
+       document.getElementById("kpi-geo").textContent = d.geographic_coverage || 'N/A';
+       document.getElementById("kpi-industry").textContent = d.industry;
+
+       if(window.innerWidth <= 1024) {
+          document.getElementById("details-panel").classList.add("open");
+          document.getElementById("backdrop").classList.add("open");
+       }
     }
-
-    // =========================
-    // INTERACTIONS
-    // =========================
-    function selectEntity(item){
-      APP.selectedId = item.id;
-      
-      // Update Table UI
-      document.querySelectorAll("#table-body tr").forEach(tr => tr.classList.remove("selected"));
-      // Simple highlight logic would go here if we tracked DOM elements mapping
-      
-      // Show Panel
-      const panel = document.getElementById("details-panel");
-      document.getElementById("panel-empty").style.display = "none";
-      document.getElementById("panel-content").style.display = "flex";
-      
-      // Fill Data
-      document.getElementById("detail-name").textContent = item.name;
-      document.getElementById("detail-type").textContent = item.actorType;
-      document.getElementById("detail-type").className = `badge ${item.actorType}`;
-      document.getElementById("detail-hq").textContent = `${item.geo.hqCity}, ${item.geo.hqCountry}`;
-      document.getElementById("detail-desc").textContent = item.description;
-      
-      const initials = item.name.substring(0,2).toUpperCase();
-      document.getElementById("detail-avatar").textContent = initials;
-      document.getElementById("detail-avatar").style.backgroundColor = getColor(item.actorType);
-      
-      document.getElementById("detail-rev").textContent = item.financials.revenueEstimateEUR ? (item.financials.revenueEstimateEUR/1000).toFixed(1)+" Md€" : "N/A";
-      document.getElementById("detail-share").textContent = item.financials.marketShareEstimate ? item.financials.marketShareEstimate+"%" : "N/A";
-
-      const tags = item.functionalTags.map(t => `<span class="tag-pill">${t}</span>`).join("");
-      document.getElementById("detail-tags").innerHTML = tags;
-      
-      document.getElementById("detail-web").href = item.website;
-      
-      // Generate Fake AI Insight
-      const text = `<strong>${item.name}</strong> se positionne comme un acteur clé du segment ${item.actorType}. ` + 
-                   (item.financials.marketShareEstimate > 10 ? "Sa part de marché indique une position dominante. " : "C'est un challenger dynamique. ") +
-                   `Les tags fonctionnels (${item.functionalTags.slice(0,2).join(", ")}) suggèrent une forte orientation technologique.`;
-      document.getElementById("assistant-text").innerHTML = text;
-
-      // Mobile Handling: Open the bottom sheet/drawer
-      if (window.innerWidth <= 1024) {
-        panel.classList.add("open");
-        document.getElementById("backdrop").classList.add("open");
-      }
-    }
-
-    function getColor(type){
-      const colors = { 
-        OEM: "#3b82f6", Tier1: "#10b981", Battery: "#8b5cf6", 
-        Software: "#f43f5e", Charging: "#06b6d4", Mobility: "#6366f1" 
-      };
-      return colors[type] || "#64748b";
-    }
-
   </script>
 </body>
 </html>
